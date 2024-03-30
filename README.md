@@ -1,8 +1,5 @@
 # Portal Platformer
 
-[![PyPI - Version](https://img.shields.io/pypi/v/portal-platformer.svg)](https://pypi.org/project/portal-platformer)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/portal-platformer.svg)](https://pypi.org/project/portal-platformer)
-
 -----
 
 **Table of Contents**
@@ -12,8 +9,22 @@
 
 ## Installation
 
-```console
-pip install portal-platformer
+``` console
+pip install git+https://github.com/waylonwalker/portal-platformer
+# or
+git clone https://github.com/waylonwalker/portal-platformer
+cd portal-platformer
+pip install .
+```
+
+## Start the Game
+
+The game is started from the console.
+
+``` console
+portal-platformer
+# debug mode on by default
+portal-platformer --debug
 ```
 
 ## License
