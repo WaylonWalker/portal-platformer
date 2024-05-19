@@ -42,17 +42,32 @@ class Object:
             )
 
 
+class CheckpointObject(Object):
+    def __init__(self, x, y, width, height, color, screen, checkpoint, checkpoint_name):
+        super().__init__(x, y, width, height, color, screen)
+        self.checkpoint = checkpoint
+        self.checkpoint_name = checkpoint_name
+
+
 class Player:
-    def __init__(self, x, y, height, width, color, screen, game):
+    def __init__(
+        self,
+        game,
+        x=None,
+        y=None,
+        height=50,
+        width=50,
+        color=(255, 255, 175),
+    ):
         self.game = game
         self.screen = self.game.screen
-        self.x = x
-        self.y = y
         self.height = height
         self.width = width
         self.color = color
         self.screen = pygame.display.get_surface()
         self.speed_factor = 0.5
+        self.speed_sprint_factor = 0.75
+        self.speed_crouch_factor = 0.25
         self.speed = 1
         self.speedx = 0
         self.speedy = 0
@@ -64,6 +79,9 @@ class Player:
         self.jump_pressed = False
         self.friction = 0
         self.device_angle = 0
+        self.checkpoint = (100, 1380)
+        self.x = x or self.checkpoint[0]
+        self.y = y or self.checkpoint[1]
         self.update_rect()
 
     def update_rect(self):
@@ -75,12 +93,19 @@ class Player:
         for obj in self.game.ohurt:
             if self.rect.colliderect(obj.rect):
                 collision = True
-                self.x = 100
-                self.y = 100
+                self.x = self.checkpoint[0]
+                self.y = self.checkpoint[1]
                 self.speedx = 0
                 self.speedy = 0
                 self.update_rect()
         return collision
+
+    def check_checkpoint_collisions_after_moving(self):
+        # check for collisions with damage causing objects
+        for obj in self.game.checkpoints:
+            print(f"checking for checkpoint collision with {obj.checkpoint}")
+            if self.rect.colliderect(obj.rect):
+                self.checkpoint = obj.checkpoint
 
     def check_collisions_after_moving_x(self, objects):
         collision = False
@@ -142,13 +167,13 @@ class Player:
 
         # determine speed
         if keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]:
-            self.speed = self.speed_factor / 2
+            self.speed = self.speed_crouch_factor
         elif keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]:
-            self.speed = self.speed_factor * 2
+            self.speed = self.speed_sprint_factor
         elif controller.get_button(3):
-            self.speed = self.speed_factor * 2
+            self.speed = self.speed_sprint_factor
         elif controller.get_button(1):
-            self.speed = self.speed_factor / 2
+            self.speed = self.speed_crouch_factor
         else:
             self.speed = self.speed_factor
 
@@ -185,21 +210,31 @@ class Player:
             self.speedy = self.speedy + (self.gravity * dt / 10)
             self.jump_timer += dt
         elif (
-            (controller.get_button(0) or controller.get_button(5))
+            (
+                controller.get_button(0)
+                or controller.get_button(4)
+                or controller.get_button(5)
+            )
             and controller.get_button(1)
             and self.jump_timer < self.max_jump_timer
         ):
             self.speedy = self.speedy + (self.gravity * dt / 20)
             self.jump_timer += dt
         elif (
-            (controller.get_button(0) or controller.get_button(5))
+            (
+                controller.get_button(0)
+                or controller.get_button(4)
+                or controller.get_button(5)
+            )
             and controller.get_button(3)
             and self.jump_timer < self.max_jump_timer
         ):
             self.speedy = self.speedy + (self.gravity * dt / 8)
             self.jump_timer += dt
         elif (
-            controller.get_button(0) or controller.get_button(5)
+            controller.get_button(0)
+            or controller.get_button(4)
+            or controller.get_button(5)
         ) and self.jump_timer < self.max_jump_timer:
             self.speedy = self.speedy + (self.gravity * dt / 10)
             self.jump_timer += dt
@@ -243,9 +278,14 @@ class Player:
 
             counter += 1
 
+        self.check_checkpoint_collisions_after_moving()
+
         self.game.messages.append(f"player pos: {round(self.x)}, {round(self.y)}")
         self.game.messages.append(
             f"player speed: {self.speedx:+02.1f}, {self.speedy:+02.1f}"
+        )
+        self.game.messages.append(
+            f"last checkpoint: {self.checkpoint[0]}, {self.checkpoint[1]}"
         )
 
         # if controller.get_axis(5) > -0.95:
@@ -361,17 +401,24 @@ class Camera:
 
 
 class Game:
-    def __init__(self, debug=False):
+    def __init__(self, debug=False, fullscreen=False):
         pygame.init()
         self.draw_rate = 4
         self.debug = debug
         self.messages = []
         self.running = True
-        self.screen = pygame.display.set_mode((1920, 1080))
+        # self.screen = pygame.display.set_mode((1920, 1080))
+        # self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        print("fullscreen")
+        print(fullscreen)
+        if fullscreen:
+            self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        else:
+            self.screen = pygame.display.set_mode((1920, 1080))
         self.clock = pygame.time.Clock()
         self.dt = 0
         self.events = pygame.event.get()
-        self.player = Player(100, 100, 50, 50, (255, 255, 175), self.screen, self)
+        self.player = Player(self)
         self.fps = []
         pygame.display.set_caption("Portal Platformer")
         try:
@@ -391,6 +438,29 @@ class Game:
                 self.screen,
             )
         ]
+        self.checkpoints = [
+            CheckpointObject(
+                1200,
+                0,
+                50,
+                self.screen.get_height(),
+                (175, 255, 175),
+                self.screen,
+                (1200, 1200),
+                "in the lava",
+            ),
+            CheckpointObject(
+                100,
+                0,
+                50,
+                self.screen.get_height(),
+                (175, 255, 175),
+                self.screen,
+                (100, 1200),
+                "spawn",
+            ),
+        ]
+
         self.objects = [
             Object(
                 300, self.screen.get_height() - 200, 50, 50, (255, 0, 255), self.screen
@@ -419,7 +489,9 @@ class Game:
                 if not i % 10 == 0 and not (i - 1) % 10 == 0
             ],
         ]
-        self.camera = Camera(self.screen, self.player, 1920, 1080)
+        self.camera = Camera(
+            self.screen, self.player, self.screen.get_width(), self.screen.get_height()
+        )
         self.font = pygame.font.SysFont(None, 30)
 
     def run(self):
@@ -471,6 +543,9 @@ class Game:
 
         for obj in self.ohurt:
             obj.draw(self.camera)
+        if self.debug:
+            for obj in self.checkpoints:
+                obj.draw(self.camera)
         # self.camera.update(self.player)
         if self.debug:
             self.camera.draw()
