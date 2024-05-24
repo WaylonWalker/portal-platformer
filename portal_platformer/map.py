@@ -6,39 +6,6 @@ from pydantic import BaseModel
 
 from portal_platformer.color import Color, ColorPalette
 
-# class Object:
-#     def __init__(self, x, y, width, height, color, screen):
-#         self.screen = screen
-#         self.x = x
-#         self.y = y
-#         self.width = width
-#         self.height = height
-#         self.color = color
-#         self.screen = pygame.display.get_surface()
-#         self.rect = pygame.Rect(x, y, width, height)
-#
-#     # @property
-#     # def rect(self):
-#     #     return _rect(self.x, self.y, self.width, self.height)
-#     #
-#     def draw(self, camera):
-#         if self.rect.colliderect(camera.state):
-#             pygame.draw.rect(
-#                 self.screen,
-#                 self.color,
-#                 (
-#                     self.x - camera.state.left,
-#                     self.y - camera.state.top,
-#                     self.width,
-#                     self.height,
-#                 ),
-#             )
-
-
-# class ObjectAttribute(Enum):
-#     collision = "collision"
-#     damage = "damage"
-
 
 class Checkpoint(BaseModel):
     name: str
