@@ -63,7 +63,12 @@ class CheckpointObject(Object):
 
 class Game:
     def __init__(
-        self, debug=False, fullscreen=False, width=1920, height=1080, map="test"
+        self,
+        debug=False,
+        fullscreen=False,
+        width=1920,
+        height=1080,
+        map="test",
     ):
         pygame.init()
         pygame.mixer.init(
@@ -95,7 +100,7 @@ class Game:
         self.dt = 0
         self.events = pygame.event.get()
         self.player = Player(self)
-        self.load_map("test")
+        self.load_map(map)
         self.fps = []
         pygame.display.set_caption("Portal Platformer")
         try:
