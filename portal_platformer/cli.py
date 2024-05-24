@@ -1,5 +1,3 @@
-import sys
-
 from portal_platformer.game import Game
 
 
