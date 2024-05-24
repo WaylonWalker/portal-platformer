@@ -1,0 +1,64 @@
+{
+    "name": "test2",
+ "objects": [   
+  {
+   "name": "test",
+   "x": 100,
+   "y": 1500,
+   "width": 100,
+   "height": 100,
+   "color": "azure",
+   "collision": true
+  },
+  {
+   "name": "floor",
+   "x": -900,
+   "y": 1400,
+   "width": 1000,
+   "height": 100,
+   "color": {
+    "r": 255,
+    "g": 0,
+    "b": 255
+   },
+   "collision": true
+  },
+  {
+   "name": "door",
+   "x": -900,
+   "y": 1300,
+   "width": 20,
+   "height": 100,
+   "color": "brown4",
+   "collision": false,
+   "damage": false,
+   "open": true,
+   "link": {
+    "name": "test",
+    "checkpoint": {
+     "name": "door",
+     "x": 1100,
+     "y": 1350
+    }
+   }
+
+  },
+  {
+   "name": "lava",
+   "x": -10000,
+   "y": 1600,
+   "width": 20000,
+   "height": 10000,
+   "color": {
+    "r": 255,
+    "g": 100,
+    "b": 55
+   },
+   "damage": true,
+   "collision": false
+  }
+
+  
+ ]
+
+}
