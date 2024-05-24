@@ -25,42 +25,6 @@ def _rect(x, y, width, height):
     return pygame.Rect(x, y, width, height)
 
 
-class Object:
-    def __init__(self, x, y, width, height, color, screen):
-        self.screen = screen
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.color = color
-        self.screen = pygame.display.get_surface()
-        self.rect = pygame.Rect(x, y, width, height)
-
-    # @property
-    # def rect(self):
-    #     return _rect(self.x, self.y, self.width, self.height)
-    #
-    def draw(self, camera):
-        if self.rect.colliderect(camera.state):
-            pygame.draw.rect(
-                self.screen,
-                self.color,
-                (
-                    self.x - camera.state.left,
-                    self.y - camera.state.top,
-                    self.width,
-                    self.height,
-                ),
-            )
-
-
-class CheckpointObject(Object):
-    def __init__(self, x, y, width, height, color, screen, checkpoint, checkpoint_name):
-        super().__init__(x, y, width, height, color, screen)
-        self.checkpoint = checkpoint
-        self.checkpoint_name = checkpoint_name
-
-
 class Game:
     def __init__(
         self,
@@ -110,67 +74,6 @@ class Game:
         except pygame.error:
             self.controller = None
 
-        self.ohurt = [
-            Object(
-                -12000,
-                self.screen.get_height() + 40 + 100,
-                12000 * 2,
-                self.screen.get_height(),
-                (255, 75, 75),
-                self.screen,
-            )
-        ]
-        self.checkpoints = [
-            CheckpointObject(
-                1200,
-                0,
-                50,
-                self.screen.get_height(),
-                (175, 255, 175),
-                self.screen,
-                (1200, 1200),
-                "in the lava",
-            ),
-            CheckpointObject(
-                100,
-                0,
-                50,
-                self.screen.get_height(),
-                (175, 255, 175),
-                self.screen,
-                (100, 1200),
-                "spawn",
-            ),
-        ]
-
-        self.objects = [
-            Object(
-                300, self.screen.get_height() - 200, 50, 50, (255, 0, 255), self.screen
-            ),
-            Object(
-                600,
-                self.screen.get_height() - 200,
-                50,
-                250,
-                (175, 255, 175),
-                self.screen,
-            ),
-            # Object(
-            #     -600, self.screen.get_height(), 12000, 50, (100, 155, 255), self.screen
-            # ),
-            *[
-                Object(
-                    -600 + 50 * i,
-                    self.screen.get_height() + random.randint(-2, 2),
-                    40,
-                    40,
-                    (55, 55, 55),
-                    self.screen,
-                )
-                for i in range(1200)
-                if not i % 10 == 0 and not (i - 1) % 10 == 0
-            ],
-        ]
         self.camera = Camera(
             self.screen, self.player, self.screen.get_width(), self.screen.get_height()
         )
