@@ -1,5 +1,6 @@
 from functools import lru_cache
 from pathlib import Path
+from typing import Optional
 
 import jinja2
 import pygame
@@ -9,6 +10,7 @@ from rich.console import Console
 from portal_platformer.camera import Camera
 from portal_platformer.map import Map
 from portal_platformer.player import Player
+from portal_platformer.state import SaveState
 
 console = Console()
 
@@ -31,7 +33,8 @@ class Game:
         fullscreen=False,
         width=1920,
         height=1080,
-        map="test",
+        map: Optional[str] = None,
+        save_file="save_state",
     ):
         pygame.init()
         pygame.mixer.init(
@@ -41,20 +44,12 @@ class Game:
             buffer=512,
         )
 
-        # pygame.mixer.pre_init(
-        #     frequency=44100,
-        #     size=-16,
-        #     channels=2,
-        #     buffer=2048,
-        # )
+        self.save_state = SaveState(self, save_file=save_file)
+
         self.draw_rate = 4
         self.debug = debug
         self.messages = []
         self.running = True
-        # self.screen = pygame.display.set_mode((1920, 1080))
-        # self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-        print("fullscreen")
-        print(fullscreen)
         if fullscreen:
             self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         else:
@@ -62,7 +57,11 @@ class Game:
         self.clock = pygame.time.Clock()
         self.dt = 0
         self.events = pygame.event.get()
-        self.player = Player(self)
+        self.player = Player(self, **self.save_state.state.player.model_dump())
+        if map is None and self.save_state.state.map.name is None:
+            map = "test"
+        if self.save_state.state.map.name is not None:
+            map = self.save_state.state.map.name
         self.load_map(map)
         self.fps = []
         pygame.display.set_caption("Portal Platformer")

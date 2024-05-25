@@ -1,3 +1,5 @@
+from typing import List, Optional
+
 import pygame
 
 
@@ -7,6 +9,7 @@ class Player:
         game,
         x=None,
         y=None,
+        checkpoint=(100, 1380),
         height=50,
         width=50,
         color=(255, 255, 175),
@@ -31,10 +34,19 @@ class Player:
         self.jump_pressed = False
         self.friction = 0
         self.device_angle = 0
-        self.checkpoint = (100, 1380)
+        self.checkpoint = checkpoint
         self.x = x or self.checkpoint[0]
         self.y = y or self.checkpoint[1]
         self.update_rect()
+
+    def set_checkpoint(self, checkpoint: List[int], map: str = None):
+        self.checkpoint = (checkpoint.x, checkpoint.y)
+        self.game.save_state.state.player.checkpoint = self.checkpoint
+        self.game.save_state.state.player.x = int(self.x)
+        self.game.save_state.state.player.y = int(self.y)
+        if map is not None:
+            self.game.save_state.state.map.name = map
+        self.game.save_state.save()
 
     def reset_to_checkpoint(self):
         self.x = self.checkpoint[0]
@@ -68,7 +80,8 @@ class Player:
         for obj in [obj for obj in self.game.map.objects if obj.open]:
             if self.rect.colliderect(obj.rect):
                 self.game.load_map(obj.link.name)
-                self.checkpoint = (obj.link.checkpoint.x, obj.link.checkpoint.y)
+                # self.checkpoint = (obj.link.checkpoint.x, obj.link.checkpoint.y)
+                self.set_checkpoint(obj.link.checkpoint, obj.link.name)
                 self.reset_to_checkpoint()
 
     def check_collisions_after_moving_x(self):
