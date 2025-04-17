@@ -16,11 +16,7 @@
    "y": 1400,
    "width": 1000,
    "height": 100,
-   "color": {
-    "r": 255,
-    "g": 0,
-    "b": 255
-   },
+   "color": "azure",
    "collision": true
   },
   {
@@ -29,7 +25,7 @@
    "y": 1300,
    "width": 20,
    "height": 100,
-   "color": "brown4",
+   "color": "tan",
    "collision": false,
    "damage": false,
    "open": true,
@@ -50,9 +46,9 @@
    "width": 20000,
    "height": 10000,
    "color": {
-    "r": 255,
-    "g": 100,
-    "b": 55
+    "r": 38,
+    "g": 13,
+    "b": 13
    },
    "damage": true,
    "collision": false

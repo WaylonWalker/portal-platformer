@@ -100,17 +100,18 @@ class Game:
     def tick(self):
         self.fps.append(self.clock.get_fps())
         self.fps = self.fps[-1000:]
-        self.messages.append(f"FPS: {int((sum(self.fps) / len(self.fps))/5) * 5}")
+        self.messages.append(f"FPS: {int((sum(self.fps) / len(self.fps)) / 5) * 5}")
         # self.messages.append(
         #     f"FPS: {int((int(self.clock.get_fps()/5)*5) / self.draw_rate)}"
         # )
-        self.messages.append(f"controller: {self.controller.get_name()}")
+        if self.controller:
+            self.messages.append(f"controller: {self.controller.get_name()}")
         self.events = pygame.event.get()
         for event in self.events:
             if event.type == pygame.QUIT:
                 self.running = False
 
-        self.screen.fill("purple")
+        self.screen.fill("black")
         # player movement
         keys = pygame.key.get_pressed()
 
