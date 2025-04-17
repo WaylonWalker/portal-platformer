@@ -22,7 +22,7 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dependencies = ['pygame', 'pygbag', 'pydantic', 'jinja2']
+dependencies = ['pygame', 'pygbag', 'pydantic', 'jinja2', 'typer']
 
 [project.urls]
 Documentation = "https://github.com/unknown/portal-platformer#readme"
@@ -30,7 +30,7 @@ Issues = "https://github.com/unknown/portal-platformer/issues"
 Source = "https://github.com/unknown/portal-platformer"
 
 [project.scripts]
-portal-platformer = "portal_platformer.cli:main"
+portal-platformer = "portal_platformer.cli:app"
 
 [tool.hatch.version]
 path = "portal_platformer/__about__.py"
