@@ -1,6 +1,8 @@
-from typing import List, Optional
+from typing import List
 
 import pygame
+
+from portal_platformer.light import Light
 
 
 class Player:
@@ -38,6 +40,13 @@ class Player:
         self.x = x or self.checkpoint[0]
         self.y = y or self.checkpoint[1]
         self.update_rect()
+        self.light = Light(
+            game=self.game,
+            x=self.x,
+            y=self.y,
+            radius=200,
+            color=(255, 255, 255),
+        )
 
     def set_checkpoint(self, checkpoint: List[int], map: str = None):
         self.checkpoint = (checkpoint.x, checkpoint.y)
@@ -110,6 +119,10 @@ class Player:
     def check_collisions_after_moving_y(self, keys, controller):
         # check for collisions after moving y
         collision = False
+
+        if not controller:
+            return collision
+
         self.update_rect()
         for obj in [obj for obj in self.game.map.objects if obj.collision]:
             if self.rect.colliderect(obj.rect):
@@ -141,6 +154,9 @@ class Player:
 
     def move(self, keys, controller, dt):
         self.speedx = 0
+
+        if controller is None:
+            return
 
         # determine speed
         if keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]:
@@ -278,8 +294,11 @@ class Player:
     def draw(self, camera):
         self.game.messages.append(f"player pos: {round(self.x)}, {round(self.y)}")
         device_surf = pygame.Surface((200, 200), pygame.SRCALPHA)
-        device_surf.set_colorkey("purple")
-        device_surf.fill("purple")
+        device_surf.set_colorkey("black")
+        device_surf.fill("black")
+        self.light.x = self.x - camera.state.left
+        self.light.y = self.y - camera.state.top
+        self.light.draw()
         pygame.draw.rect(device_surf, (55, 55, 105), (125, 100, 20, 5))
         # rotate around center
         device_surf = pygame.transform.rotate(device_surf, self.device_angle)
