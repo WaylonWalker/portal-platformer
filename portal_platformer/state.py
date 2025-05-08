@@ -1,5 +1,7 @@
 from pathlib import Path
-from typing import List
+from portal_platformer.keymap import KeyMap
+
+from portal_platformer.map import Checkpoint
 
 from pydantic import BaseModel
 
@@ -24,7 +26,7 @@ class SaveState:
 class PlayerState(BaseModel):
     x: int = 100
     y: int = 1380
-    checkpoint: List[int] = (100, 1380)
+    checkpoint: Checkpoint = Checkpoint(name="test", x=100, y=1380)
 
 
 class MapState(BaseModel):
@@ -34,3 +36,4 @@ class MapState(BaseModel):
 class State(BaseModel):
     player: PlayerState = PlayerState()
     map: MapState = MapState()
+    keymap: KeyMap = KeyMap()

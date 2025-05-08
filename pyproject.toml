@@ -66,3 +66,9 @@ tests = ["tests", "*/portal-platformer/tests"]
 
 [tool.coverage.report]
 exclude_lines = ["no cov", "if __name__ == .__main__.:", "if TYPE_CHECKING:"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11.8",
+    "ty>=0.0.0a7",
+]

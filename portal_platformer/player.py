@@ -1,4 +1,5 @@
-from typing import List
+from portal_platformer.map import Checkpoint
+from typing import Optional
 
 import pygame
 
@@ -11,7 +12,7 @@ class Player:
         game,
         x=None,
         y=None,
-        checkpoint=(100, 1380),
+        checkpoint=Checkpoint(name="test", x=100, y=1380),
         height=50,
         width=50,
         color=(255, 255, 175),
@@ -37,8 +38,8 @@ class Player:
         self.friction = 0
         self.device_angle = 0
         self.checkpoint = checkpoint
-        self.x = x or self.checkpoint[0]
-        self.y = y or self.checkpoint[1]
+        self.x = x or self.checkpoint.x
+        self.y = y or self.checkpoint.y
         self.update_rect()
         self.light = Light(
             game=self.game,
@@ -48,8 +49,17 @@ class Player:
             color=(255, 255, 255),
         )
 
-    def set_checkpoint(self, checkpoint: List[int], map: str = None):
-        self.checkpoint = (checkpoint.x, checkpoint.y)
+    @classmethod
+    def from_game_object(cls, obj):
+        return cls(
+            game=obj,
+            x=obj.save_state.state.player.x,
+            y=obj.save_state.state.player.y,
+            checkpoint=obj.save_state.state.player.checkpoint,
+        )
+
+    def set_checkpoint(self, checkpoint: Checkpoint, map: Optional[str] = None):
+        self.checkpoint = checkpoint
         self.game.save_state.state.player.checkpoint = self.checkpoint
         self.game.save_state.state.player.x = int(self.x)
         self.game.save_state.state.player.y = int(self.y)
@@ -58,8 +68,8 @@ class Player:
         self.game.save_state.save()
 
     def reset_to_checkpoint(self):
-        self.x = self.checkpoint[0]
-        self.y = self.checkpoint[1]
+        self.x = self.checkpoint.x
+        self.y = self.checkpoint.y
         self.speedx = 0
         self.speedy = 0
         self.falling_timer = 0
@@ -88,10 +98,13 @@ class Player:
 
         for obj in [obj for obj in self.game.map.objects if obj.open]:
             if self.rect.colliderect(obj.rect):
+                print(f"loading map {obj.link.name}")
                 self.game.load_map(obj.link.name)
                 # self.checkpoint = (obj.link.checkpoint.x, obj.link.checkpoint.y)
                 self.set_checkpoint(obj.link.checkpoint, obj.link.name)
+                print(f"checkpoint: {obj.link.name}.{self.checkpoint}")
                 self.reset_to_checkpoint()
+                print(f"player x,y: {self.x}, {self.y}")
 
     def check_collisions_after_moving_x(self):
         collision = False
@@ -278,7 +291,7 @@ class Player:
             f"player speed: {self.speedx:+02.1f}, {self.speedy:+02.1f}"
         )
         self.game.messages.append(
-            f"last checkpoint: {self.checkpoint[0]}, {self.checkpoint[1]}"
+            f"last checkpoint: {self.checkpoint.x}, {self.checkpoint.y}"
         )
         self.game.messages.append(f"current map: {self.game.map.name}")
 

@@ -1,0 +1,31 @@
+{
+  "player": {
+    "x": -883,
+    "y": 1350,
+    "checkpoint": {
+      "name": "door",
+      "x": 1100,
+      "y": 1350
+    }
+  },
+  "map": {
+    "name": "test"
+  },
+  "keymap": {
+    "jump": {
+      "key": "K_SPACE"
+    },
+    "left": {
+      "key": "K_a"
+    },
+    "right": {
+      "key": "K_RIGHT"
+    },
+    "up": {
+      "key": "K_UP"
+    },
+    "down": {
+      "key": "K_DOWN"
+    }
+  }
+}

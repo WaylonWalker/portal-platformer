@@ -2,6 +2,7 @@ import typer
 
 from portal_platformer.game import Game
 from portal_platformer.server import Server
+from portal_platformer.controller_button_debug import listen_controller
 
 app = typer.Typer()
 
@@ -26,6 +27,11 @@ def run(
 
     game = Game(**args)
     game.run()
+
+
+@app.command("listen-controller")
+def cli_listen_controller():
+    listen_controller()
 
 
 @app.command()

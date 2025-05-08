@@ -2,6 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
+
 import jinja2
 import pygame
 from pyinstrument import Profiler
@@ -11,6 +12,7 @@ from portal_platformer.camera import Camera
 from portal_platformer.map import Map
 from portal_platformer.player import Player
 from portal_platformer.state import SaveState
+from portal_platformer.controller_state import ControllerState
 
 console = Console()
 
@@ -50,6 +52,7 @@ class Game:
         self.debug = debug
         self.messages = []
         self.running = True
+        self.paused = False
         if fullscreen:
             self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         else:
@@ -57,7 +60,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.dt = 0
         self.events = pygame.event.get()
-        self.player = Player(self, **self.save_state.state.player.model_dump())
+        self.player = Player.from_game_object(self)
         if map is None and self.save_state.state.map.name is None:
             map = "test"
         if self.save_state.state.map.name is not None:
@@ -69,6 +72,7 @@ class Game:
             self.controller = pygame.joystick.Joystick(0)
             self.controller.init()
             self.axes = self.controller.get_numaxes()
+            self.controller_state = ControllerState(self.controller, self.controller)
         except pygame.error:
             self.controller = None
 
@@ -76,6 +80,18 @@ class Game:
             self.screen, self.player, self.screen.get_width(), self.screen.get_height()
         )
         self.font = pygame.font.SysFont(None, 30)
+
+        from portal_platformer.menu import Menu, MenuItem
+
+        items = [
+            MenuItem(text=f"{label}: {key.key.strip('K_')}", game=self)
+            for label, key in self.save_state.state.keymap
+        ]
+
+        self.menu = Menu(
+            items=items,
+            game=self,
+        )
 
     def load_map(self, map_name: str):
         self.map = Map.model_validate_json(
@@ -98,6 +114,14 @@ class Game:
         console.print(f"Profile: {profile.output_text()}")
 
     def tick(self):
+        if self.controller:
+            self.controller_state = ControllerState(
+                self.controller, self.controller_state
+            )
+        if self.controller:
+            if self.controller_state.button_pressed(8):
+                self.paused = not self.paused
+                print(self.save_state.state.keymap)
         self.fps.append(self.clock.get_fps())
         self.fps = self.fps[-1000:]
         self.messages.append(f"FPS: {int((sum(self.fps) / len(self.fps)) / 5) * 5}")
@@ -114,6 +138,15 @@ class Game:
         self.screen.fill("black")
         # player movement
         keys = pygame.key.get_pressed()
+
+        if self.paused:
+            if keys[self.save_state.state.keymap.down.key_id]:
+                self.menu.move_down()
+            if keys[self.save_state.state.keymap.up.key_id]:
+                self.menu.move_up()
+            self.menu.draw()
+            pygame.display.flip()
+            return
 
         if keys[pygame.K_F3]:
             self.debug = not self.debug
