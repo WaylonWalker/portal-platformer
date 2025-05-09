@@ -1,10 +1,10 @@
 {
   "player": {
-    "x": -883,
+    "x": -48,
     "y": 1350,
     "checkpoint": {
       "name": "door",
-      "x": 1100,
+      "x": 50,
       "y": 1350
     }
   },
@@ -13,19 +13,103 @@
   },
   "keymap": {
     "jump": {
-      "key": "K_SPACE"
+      "key": "K_SPACE",
+      "history": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "history_length": 5
     },
     "left": {
-      "key": "K_a"
+      "key": "K_a",
+      "history": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "history_length": 5
     },
     "right": {
-      "key": "K_RIGHT"
+      "key": "K_f",
+      "history": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "history_length": 5
     },
     "up": {
-      "key": "K_UP"
+      "key": "K_s",
+      "history": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "history_length": 5
     },
     "down": {
-      "key": "K_DOWN"
+      "key": "K_d",
+      "history": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "history_length": 5
+    },
+    "menu": {
+      "key": "K_ESCAPE",
+      "history": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "history_length": 5
+    },
+    "select": {
+      "key": "K_RETURN",
+      "history": [
+        false,
+        false,
+        false,
+        false,
+        true
+      ],
+      "history_length": 5
+    },
+    "debug": {
+      "key": "K_F3",
+      "history": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "history_length": 5
+    },
+    "fullscreen": {
+      "key": "K_F11",
+      "history": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "history_length": 5
     }
   }
 }

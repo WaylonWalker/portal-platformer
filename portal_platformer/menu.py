@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+import pygame
 from typing import TYPE_CHECKING, List, Any
 
 if TYPE_CHECKING:
@@ -8,16 +9,22 @@ if TYPE_CHECKING:
 class MenuItem(BaseModel):
     text: str
     game: Any
+    action: Any
 
     @property
     def height(self):
         return self.game.font.size(self.text)[1]
+
+    # def action(self):
+    #     print("action")
+    #     pass
 
 
 class Menu(BaseModel):
     items: List[MenuItem]
     game: Any
     selected: int = 0
+    selected_color: str = "red"
 
     def move_down(self):
         self.selected = (self.selected + 1) % len(self.items)
@@ -33,13 +40,21 @@ class Menu(BaseModel):
     def width(self):
         return max([len(item.text) for item in self.items])
 
+    def select(self):
+        print("taking action")
+        self.selected_color = "blue"
+        self.draw()
+        pygame.display.flip()
+        self.items[self.selected].action()
+        self.selected_color = "red"
+
     def draw(self):
         y = (self.game.screen.get_height() - self.height) // 2
         x = (self.game.screen.get_width() - self.width) // 2
 
         for i, item in enumerate(self.items):
             if i == self.selected:
-                color = "red"
+                color = self.selected_color
             else:
                 color = "white"
             item_surf = self.game.font.render(item.text, True, color)

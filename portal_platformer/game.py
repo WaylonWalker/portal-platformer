@@ -1,4 +1,5 @@
 from functools import lru_cache
+from portal_platformer.menu import Menu, MenuItem
 from pathlib import Path
 from typing import Optional
 
@@ -47,6 +48,7 @@ class Game:
         )
 
         self.save_state = SaveState(self, save_file=save_file)
+        self.state = self.save_state.state
 
         self.draw_rate = 4
         self.debug = debug
@@ -61,10 +63,10 @@ class Game:
         self.dt = 0
         self.events = pygame.event.get()
         self.player = Player.from_game_object(self)
-        if map is None and self.save_state.state.map.name is None:
+        if map is None and self.state.map.name is None:
             map = "test"
-        if self.save_state.state.map.name is not None:
-            map = self.save_state.state.map.name
+        if self.state.map.name is not None:
+            map = self.state.map.name
         self.load_map(map)
         self.fps = []
         pygame.display.set_caption("Portal Platformer")
@@ -80,18 +82,6 @@ class Game:
             self.screen, self.player, self.screen.get_width(), self.screen.get_height()
         )
         self.font = pygame.font.SysFont(None, 30)
-
-        from portal_platformer.menu import Menu, MenuItem
-
-        items = [
-            MenuItem(text=f"{label}: {key.key.strip('K_')}", game=self)
-            for label, key in self.save_state.state.keymap
-        ]
-
-        self.menu = Menu(
-            items=items,
-            game=self,
-        )
 
     def load_map(self, map_name: str):
         self.map = Map.model_validate_json(
@@ -114,14 +104,26 @@ class Game:
         console.print(f"Profile: {profile.output_text()}")
 
     def tick(self):
+        if hasattr(self, "menu"):
+            selected = self.menu.selected
+        else:
+            selected = 0
+        items = [
+            MenuItem(
+                text=f"{label}: {key.key.strip('K_')}", game=self, action=key.remap
+            )
+            for label, key in self.state.keymap
+        ]
+
+        self.menu = Menu(
+            items=items,
+            game=self,
+        )
+        self.menu.selected = selected
         if self.controller:
             self.controller_state = ControllerState(
                 self.controller, self.controller_state
             )
-        if self.controller:
-            if self.controller_state.button_pressed(8):
-                self.paused = not self.paused
-                print(self.save_state.state.keymap)
         self.fps.append(self.clock.get_fps())
         self.fps = self.fps[-1000:]
         self.messages.append(f"FPS: {int((sum(self.fps) / len(self.fps)) / 5) * 5}")
@@ -138,12 +140,25 @@ class Game:
         self.screen.fill("black")
         # player movement
         keys = pygame.key.get_pressed()
+        self.state.keymap.update(keys)
+
+        if self.controller:
+            if self.controller_state.button_pressed(8):
+                self.paused = not self.paused
+                print(self.save_state.state.keymap)
+
+        if self.state.keymap.menu.key_down:
+            self.paused = not self.paused
 
         if self.paused:
-            if keys[self.save_state.state.keymap.down.key_id]:
+            if self.state.keymap.down.key_down:
                 self.menu.move_down()
-            if keys[self.save_state.state.keymap.up.key_id]:
+            if self.state.keymap.up.key_down:
                 self.menu.move_up()
+            if self.state.keymap.select.key_down:
+                print("select")
+                self.menu.select()
+                self.save_state.save()
             self.menu.draw()
             pygame.display.flip()
             return
