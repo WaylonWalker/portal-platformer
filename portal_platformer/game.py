@@ -96,18 +96,14 @@ class Game:
         while self.running:
             self.frame += 1
             self.dt = self.clock.tick(800)
-            # self.dt = self.clock.tick(65)
+            # self.dt = self.clock.tick(120)
             self.tick()
         profile.stop()
 
         # console.print(f"FPS: {(int(self.clock.get_fps()/5)*5) / self.draw_rate}")
         console.print(f"Profile: {profile.output_text()}")
 
-    def tick(self):
-        if hasattr(self, "menu"):
-            selected = self.menu.selected
-        else:
-            selected = 0
+    def create_menu(self):
         items = [
             MenuItem(
                 text=f"{label}: {key.key.strip('K_')}", game=self, action=key.remap
@@ -122,7 +118,8 @@ class Game:
             ],
             game=self,
         )
-        self.menu.selected = selected
+
+    def tick(self):
         if self.controller:
             self.controller_state = ControllerState(
                 self.controller, self.controller_state
@@ -130,6 +127,9 @@ class Game:
         self.fps.append(self.clock.get_fps())
         self.fps = self.fps[-1000:]
         self.messages.append(f"FPS: {int((sum(self.fps) / len(self.fps)) / 5) * 5}")
+        self.messages.append(
+            f"DRAW FPS: {(int((sum(self.fps) / len(self.fps)) / 5) * 5) / self.draw_rate}"
+        )
         # self.messages.append(
         #     f"FPS: {int((int(self.clock.get_fps()/5)*5) / self.draw_rate)}"
         # )
@@ -148,10 +148,14 @@ class Game:
         if self.controller:
             if self.controller_state.button_pressed(8):
                 self.paused = not self.paused
+                if self.paused:
+                    self.create_menu()
                 print(self.save_state.state.keymap)
 
         if self.state.keymap.menu.key_down:
             self.paused = not self.paused
+            if self.paused:
+                self.create_menu()
 
         if self.paused:
             if self.state.keymap.down.key_down:
@@ -163,10 +167,14 @@ class Game:
                 self.menu.select()
                 self.save_state.save()
             self.menu.draw()
+
+            if self.debug:
+                self.render_messages()
+            self.messages = []
             pygame.display.flip()
             return
 
-        if keys[pygame.K_F3]:
+        if self.state.keymap.debug.key_down:
             self.debug = not self.debug
 
         self.player.move(keys, self.controller, self.dt)

@@ -1,7 +1,7 @@
 {
   "player": {
-    "x": -48,
-    "y": 1350,
+    "x": -4,
+    "y": 1255,
     "checkpoint": {
       "name": "door",
       "x": 50,
@@ -85,7 +85,7 @@
         false,
         false,
         false,
-        true
+        false
       ],
       "history_length": 5
     },

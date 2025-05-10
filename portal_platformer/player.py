@@ -176,6 +176,7 @@ class Player:
             self.speed = self.speed_crouch_factor
         elif keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]:
             self.speed = self.speed_sprint_factor
+
         elif controller.get_button(3):
             self.speed = self.speed_sprint_factor
         elif controller.get_button(1):
@@ -184,13 +185,13 @@ class Player:
             self.speed = self.speed_factor
 
         # determine direction
-        if keys[pygame.K_LEFT]:
+        if self.game.state.keymap.left.is_pressed:
             self.speedx -= self.speed
-        if keys[pygame.K_RIGHT]:
+        if self.game.state.keymap.right.is_pressed:
             self.speedx += self.speed
-        if keys[pygame.K_a]:
+        if self.game.state.keymap.up.is_pressed:
             self.speedx -= self.speed
-        if keys[pygame.K_d]:
+        if self.game.state.keymap.down.is_pressed:
             self.speedx += self.speed
 
         # now do controller
@@ -212,7 +213,10 @@ class Player:
             self.device_angle = adjusted_angle
 
         # set speedy and jump_timer
-        if keys[pygame.K_SPACE] and self.jump_timer < self.max_jump_timer:
+        if (
+            self.game.state.keymap.jump.is_pressed
+            and self.jump_timer < self.max_jump_timer
+        ):
             self.speedy = self.speedy + (self.gravity * dt / 10)
             self.jump_timer += dt
         elif (
