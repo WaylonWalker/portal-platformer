@@ -1,5 +1,5 @@
 from functools import lru_cache
-from portal_platformer.menu import Menu, MenuItem
+from portal_platformer.menu import create_menu
 from pathlib import Path
 from typing import Optional
 
@@ -103,22 +103,6 @@ class Game:
         # console.print(f"FPS: {(int(self.clock.get_fps()/5)*5) / self.draw_rate}")
         console.print(f"Profile: {profile.output_text()}")
 
-    def create_menu(self):
-        items = [
-            MenuItem(
-                text=f"{label}: {key.key.strip('K_')}", game=self, action=key.remap
-            )
-            for label, key in self.state.keymap
-        ]
-
-        self.menu = Menu(
-            items=[
-                MenuItem(text="Paused", game=self, action=None, margin_bottom=10),
-                *items,
-            ],
-            game=self,
-        )
-
     def tick(self):
         if self.controller:
             self.controller_state = ControllerState(
@@ -149,13 +133,13 @@ class Game:
             if self.controller_state.button_pressed(8):
                 self.paused = not self.paused
                 if self.paused:
-                    self.create_menu()
+                    self.menu = create_menu(self)
                 print(self.save_state.state.keymap)
 
         if self.state.keymap.menu.key_down:
             self.paused = not self.paused
             if self.paused:
-                self.create_menu()
+                self.menu = create_menu(self)
 
         if self.paused:
             if self.state.keymap.down.key_down:

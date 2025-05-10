@@ -37,6 +37,9 @@ class Menu(BaseModel):
         if self.items[self.selected].action is None:
             self.move_up()
 
+    def update(self, game):
+        return create_menu(game)
+
     @property
     def height(self):
         return sum([item.height for item in self.items])
@@ -50,7 +53,7 @@ class Menu(BaseModel):
         self.selected_color = "blue"
         self.draw()
         pygame.display.flip()
-        self.items[self.selected].action()
+        self.items[self.selected].action(self.game)
         self.selected_color = "red"
 
     def draw(self):
@@ -67,3 +70,19 @@ class Menu(BaseModel):
             item_surf = self.game.font.render(item.text, True, color)
             self.game.screen.blit(item_surf, (x, y))
             y += item.height
+
+
+def create_menu(game):
+    items = [
+        MenuItem(text=f"{label}: {key.key.strip('K_')}", game=game, action=key.remap)
+        for label, key in game.state.keymap
+    ]
+
+    menu = Menu(
+        items=[
+            MenuItem(text="Paused", game=game, action=None, margin_bottom=10),
+            *items,
+        ],
+        game=game,
+    )
+    return menu

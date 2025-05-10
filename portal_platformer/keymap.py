@@ -59,9 +59,10 @@ class Key(BaseModel):
             if not self.history[-1] and self.history[-2]:
                 return True
 
-    def remap(self):
+    def remap(self, game):
         key = wait_for_key()
         self.key = key
+        game.menu = game.menu.update(game)
 
     @field_validator("key")
     def validate_key(cls, v):
