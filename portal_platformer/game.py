@@ -116,7 +116,10 @@ class Game:
         ]
 
         self.menu = Menu(
-            items=items,
+            items=[
+                MenuItem(text="Paused", game=self, action=None, margin_bottom=10),
+                *items,
+            ],
             game=self,
         )
         self.menu.selected = selected
@@ -205,3 +208,8 @@ class Game:
             self.screen.blit(message_surface, (10, message_height))
             message_height += 20
             # print(message)
+
+
+if __name__ == "__main__":
+    game = Game()
+    game.run()
