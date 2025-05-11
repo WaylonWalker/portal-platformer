@@ -11,6 +11,15 @@
    "collision": true
   },
   {
+   "name": "center",
+   "x": -25,
+   "y": -25,
+   "width": 50,
+   "height": 50,
+   "color": "cyan",
+   "collision": true
+  },
+  {
    "name": "floor",
    "x": 200,
    "y": 1400,

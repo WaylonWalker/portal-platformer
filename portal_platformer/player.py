@@ -338,3 +338,53 @@ class Player:
                 self.height,
             ),
         )
+
+
+class Editor(Player):
+    def move(self, keys, controller, dt):
+        self.x, self.y = pygame.mouse.get_pos()
+
+    def draw(self, camera):
+        self.game.messages.append(
+            f"editor pos: {round(self.x - camera.state.left)}, {round(self.y - camera.state.top)}"
+        )
+        self.game.messages.append(
+            f"mouse pos: {round(pygame.mouse.get_pos()[0])}, {round(pygame.mouse.get_pos()[1])}"
+        )
+        # if the real mouse pos is past the real camera padding_rect move
+        if self.x > camera.state.right:
+            camera.padding_rect.right += 10
+        # elif self.x < self.camera.state.left:
+        #     self.camera.move_left()
+        # if self.y > self.camera.state.bottom:
+        #     self.camera.move_down()
+        # elif self.y < self.camera.state.top:
+        #     self.camera.move_up()
+
+        # draw player
+        pygame.draw.rect(
+            self.screen,
+            self.color,
+            (
+                # self.x,
+                # self.y,
+                self.x - camera.state.left,
+                self.y - camera.state.top,
+                self.width,
+                self.height,
+            ),
+        )
+
+        # draw mouse
+        pygame.draw.rect(
+            self.screen,
+            (255, 0, 255),
+            (
+                # self.x,
+                # self.y,
+                pygame.mouse.get_pos()[0],
+                pygame.mouse.get_pos()[1],
+                10,
+                10,
+            ),
+        )
