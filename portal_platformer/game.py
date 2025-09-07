@@ -6,7 +6,11 @@ from typing import Optional
 
 import jinja2
 import pygame
-from pyinstrument import Profiler
+
+try:
+    from pyinstrument import Profiler
+except ImportError:
+    Profiler = None
 from rich.console import Console
 
 from portal_platformer.camera import Camera
@@ -83,6 +87,15 @@ class Game:
         )
         self.font = pygame.font.SysFont(None, 30)
 
+    def message(self, message):
+        self.messages.append(message)
+
+    @property
+    def map_names(self):
+        return [
+            f.stem for f in (Path(__file__).parents[1] / "assets/maps/").glob("*.json")
+        ]
+
     def load_map(self, map_name: str):
         self.map = Map.model_validate_json(
             templates.get_template(f"{map_name}.json").render({"game": self})
@@ -90,18 +103,21 @@ class Game:
         self.map.name = map_name
 
     def run(self):
-        profile = Profiler()
-        profile.start()
+        if Profiler is None:
+            console.print("Profiler not installed")
+            profile = None
+            return
+        else:
+            profile = Profiler()
+            profile.start()
         self.frame = 0
         while self.running:
             self.frame += 1
             self.dt = self.clock.tick(800)
-            # self.dt = self.clock.tick(120)
             self.tick()
-        profile.stop()
-
-        # console.print(f"FPS: {(int(self.clock.get_fps()/5)*5) / self.draw_rate}")
-        console.print(f"Profile: {profile.output_text()}")
+        if profile is not None:
+            profile.stop()
+            console.print(f"Profile: {profile.output_text()}")
 
     def tick(self):
         if self.controller:
@@ -114,9 +130,6 @@ class Game:
         self.messages.append(
             f"DRAW FPS: {(int((sum(self.fps) / len(self.fps)) / 5) * 5) / self.draw_rate}"
         )
-        # self.messages.append(
-        #     f"FPS: {int((int(self.clock.get_fps()/5)*5) / self.draw_rate)}"
-        # )
         if self.controller:
             self.messages.append(f"controller: {self.controller.get_name()}")
         self.events = pygame.event.get()
@@ -124,7 +137,7 @@ class Game:
             if event.type == pygame.QUIT:
                 self.running = False
 
-        self.screen.fill("black")
+        self.screen.fill((125, 125, 125))
         # player movement
         keys = pygame.key.get_pressed()
         self.state.keymap.update(keys)
@@ -161,23 +174,19 @@ class Game:
         if self.state.keymap.debug.key_down:
             self.debug = not self.debug
 
+        # Toggle editor mode with E key
+        if keys[pygame.K_e]:
+            self.camera.editor_mode = not self.camera.editor_mode
+
         self.player.move(keys, self.controller, self.dt)
         self.camera.update()
         if self.frame % self.draw_rate != 0:
             # console.print("skipping draw")
             self.messages = []
             return
-        # console.print("drawing")
 
         # player movement
         self.player.draw(self.camera)
-        # for obj in self.objects:
-        #     obj.draw(self.camera)
-        # for obj in self.ohurt:
-        #     obj.draw(self.camera)
-        # if self.debug:
-        #     for obj in self.checkpoints:
-        #         obj.draw(self.camera)
 
         for obj in self.map.objects:
             obj.draw(self.camera)
@@ -190,16 +199,19 @@ class Game:
         self.messages = []
 
         self.screen.blit(self.camera.surf, (0, 0))
+
+        overlay = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
+        overlay.fill((255, 180, 100))
+        overlay.set_alpha(50)
+        self.screen.blit(overlay, (0, 0))
         pygame.display.flip()
 
     def render_messages(self):
         message_height = 10
-        # print("--" * 20)
         for message in self.messages:
             message_surface = self.font.render(message, True, (255, 255, 255))
             self.screen.blit(message_surface, (10, message_height))
             message_height += 20
-            # print(message)
 
 
 if __name__ == "__main__":

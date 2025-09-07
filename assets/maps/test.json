@@ -1,96 +1,93 @@
 {
     "name": "test",
- "objects": [   
-  {
-   "name": "box",
-   "x": 100,
-   "y": 1500,
-   "width": 100,
-   "height": 100,
-   "color": "azure",
-   "collision": true
-  },
-  {
-   "name": "center",
-   "x": -25,
-   "y": -25,
-   "width": 50,
-   "height": 50,
-   "color": "cyan",
-   "collision": true
-  },
-  {
-   "name": "floor",
-   "x": 200,
-   "y": 1400,
-   "width": 1000,
-   "height": 100,
-   "color": "azure",
-   "collision": true
-  },
-  {
-   "name": "floorb",
-   "x": -1100,
-   "y": 1400,
-   "width": 1000,
-   "height": 100,
-   "color": "azure",
-   "collision": true
-  },
-  {
-   "name": "door",
-   "x": 1180,
-   "y": 1300,
-   "width": 20,
-   "height": 100,
-   "color": "tan",
-   "collision": false,
-   "damage": false,
-   "open": true,
-   "link": {
-    "name": "test2",
-    "checkpoint": {
-     "name": "door",
-     "x": -800,
-     "y": 1350
-    }
-   }
-  },
-  {
-   "name": "doorb",
-   "x": -1100,
-   "y": 1300,
-   "width": 20,
-   "height": 100,
-   "color": "blue",
-   "collision": false,
-   "damage": false,
-   "open": true,
-   "link": {
-    "name": "test3",
-    "checkpoint": {
-     "name": "door",
-     "x": -75,
-     "y": 1350
-    }
-   }
-  },
-  {
-   "name": "lava",
-   "x": -10000,
-   "y": 1600,
-   "width": 20000,
-   "height": 10000,
-   "color": {
-    "r": 38,
-    "g": 13,
-    "b": 13
-   },
-   "damage": true,
-   "collision": false
-  }
-
-  
- ]
-
+    "objects": [
+        {
+            "name": "box",
+            "x": 100,
+            "y": 1500,
+            "width": 100,
+            "height": 100,
+            "color": "black",
+            "collision": true
+        },
+        {
+            "name": "center",
+            "x": -25,
+            "y": -25,
+            "width": 50,
+            "height": 50,
+            "color": "cyan",
+            "collision": true
+        },
+        {
+            "name": "floor",
+            "x": 200,
+            "y": 1400,
+            "width": 1000,
+            "height": 100,
+            "color": "black",
+            "collision": true
+        },
+        {
+            "name": "floorb",
+            "x": -1100,
+            "y": 1400,
+            "width": 1000,
+            "height": 100,
+            "color": "black",
+            "collision": true
+        },
+        {
+            "name": "door",
+            "x": 1180,
+            "y": 1300,
+            "width": 20,
+            "height": 100,
+            "color": "tan",
+            "collision": false,
+            "damage": false,
+            "open": true,
+            "link": {
+                "name": "test2",
+                "checkpoint": {
+                    "name": "door",
+                    "x": -800,
+                    "y": 1350
+                }
+            }
+        },
+        {
+            "name": "doorb",
+            "x": -1100,
+            "y": 1300,
+            "width": 20,
+            "height": 100,
+            "color": "blue",
+            "collision": false,
+            "damage": false,
+            "open": true,
+            "link": {
+                "name": "test3",
+                "checkpoint": {
+                    "name": "door",
+                    "x": -75,
+                    "y": 1350
+                }
+            }
+        },
+        {
+            "name": "lava",
+            "x": -10000,
+            "y": 1600,
+            "width": 20000,
+            "height": 10000,
+            "color": {
+                "r": 38,
+                "g": 13,
+                "b": 13
+            },
+            "damage": true,
+            "collision": false
+        }
+    ]
 }

@@ -87,6 +87,7 @@ class Game:
         self.camera = Camera(
             self.screen, self.player, self.screen.get_width(), self.screen.get_height()
         )
+        self.camera.editor_mode = not self.camera.editor_mode
         self.font = pygame.font.SysFont(None, 30)
 
     def load_map(self, map_name: str):
@@ -183,7 +184,6 @@ class Game:
         # console.print("drawing")
 
         # player movement
-        self.player.draw(self.camera)
         # for obj in self.objects:
         #     obj.draw(self.camera)
         # for obj in self.ohurt:
@@ -194,6 +194,8 @@ class Game:
 
         for obj in self.map.objects:
             obj.draw(self.camera)
+
+        self.player.draw(self.camera)
         # self.camera.update(self.player)
         if self.debug:
             self.camera.draw()

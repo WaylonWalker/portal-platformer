@@ -1,9 +1,21 @@
 from portal_platformer.map import Checkpoint
+from pathlib import Path
 from typing import Optional
 
 import pygame
 
 from portal_platformer.light import Light
+
+
+effects = {
+    "feather falling": {"gravity": -0.1, "terminal_velocity": -1},
+    "double jump": {"jump_count": 1},
+    "speed": {
+        "speed_factor": 0.5,
+        "speed_sprint_factor": 0.75,
+        "speed_crouch_factor": 0.25,
+    },
+}
 
 
 class Player:
@@ -13,7 +25,7 @@ class Player:
         x=None,
         y=None,
         checkpoint=Checkpoint(name="test", x=100, y=1380),
-        height=50,
+        height=64,
         width=50,
         color=(255, 255, 175),
     ):
@@ -29,14 +41,17 @@ class Player:
         self.speed = 1
         self.speedx = 0
         self.speedy = 0
+        self.terminal_velocity_up = 1
         self.terminal_velocity = 2
-        self.gravity = 0.1
+        self.coyote_time = 250
+        self.hang_time = 0
+        self.gravity = 0.15
+        self.jump_strength = 0.1
         self.jump_timer = 0
-        self.max_jump_timer = 150
+        self.max_jump_timer = self.jump_strength * 20
         self.falling_timer = 0
         self.jump_pressed = False
         self.friction = 0
-        self.device_angle = 0
         self.checkpoint = checkpoint
         self.x = x or self.checkpoint.x
         self.y = y or self.checkpoint.y
@@ -48,6 +63,24 @@ class Player:
             radius=200,
             color=(255, 255, 255),
         )
+
+        self.effects = ["featther falling"]
+
+        self.facing_right = False
+        self.facing_left = False
+        self.facing_up = False
+        self.facing_down = False
+
+        self.falling = False
+        self.jumping = False
+
+        self.front = pygame.image.load(
+            Path("assets/player/front/player-front.png")
+        ).convert_alpha()
+        self.right = pygame.image.load(
+            Path("assets/player/side/player-side.png")
+        ).convert_alpha()
+        self.left = pygame.transform.flip(self.right, True, False)
 
     @classmethod
     def from_game_object(cls, obj):
@@ -80,27 +113,18 @@ class Player:
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
 
     def check_damage_collisions_after_moving(self):
-        # check for collisions with damage causing objects
         collision = False
         for obj in [obj for obj in self.game.map.objects if obj.damage]:
             if self.rect.colliderect(obj.rect):
                 collision = True
-                # player died
-                # go back to checkpoint
                 self.reset_to_checkpoint()
         return collision
 
     def check_checkpoint_collisions_after_moving(self):
-        # check for collisions with checkpoints
-        # for obj in [obj for obj in self.game.map.objects if obj.checkpoint]:
-        #     if self.rect.colliderect(obj.rect):
-        #         self.checkpoint = obj.checkpoint
-
         for obj in [obj for obj in self.game.map.objects if obj.open]:
             if self.rect.colliderect(obj.rect):
                 print(f"loading map {obj.link.name}")
                 self.game.load_map(obj.link.name)
-                # self.checkpoint = (obj.link.checkpoint.x, obj.link.checkpoint.y)
                 self.set_checkpoint(obj.link.checkpoint, obj.link.name)
                 print(f"checkpoint: {obj.link.name}.{self.checkpoint}")
                 self.reset_to_checkpoint()
@@ -130,7 +154,6 @@ class Player:
         return collision
 
     def check_collisions_after_moving_y(self, keys, controller):
-        # check for collisions after moving y
         collision = False
 
         if not controller:
@@ -139,9 +162,6 @@ class Player:
         self.update_rect()
         for obj in [obj for obj in self.game.map.objects if obj.collision]:
             if self.rect.colliderect(obj.rect):
-                # and (
-                # self.rect.right > obj.rect.left or self.rect.left < obj.rect.right
-                # ):
                 collision = True
                 if self.speedy < 0:
                     # landed
@@ -169,7 +189,7 @@ class Player:
         self.speedx = 0
 
         if controller is None:
-            return
+            self.game.message("No controller connected")
 
         # determine speed
         if keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]:
@@ -177,9 +197,9 @@ class Player:
         elif keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]:
             self.speed = self.speed_sprint_factor
 
-        elif controller.get_button(3):
+        elif controller is not None and controller.get_button(3):
             self.speed = self.speed_sprint_factor
-        elif controller.get_button(1):
+        elif controller is not None and controller.get_button(1):
             self.speed = self.speed_crouch_factor
         else:
             self.speed = self.speed_factor
@@ -195,69 +215,61 @@ class Player:
             self.speedx += self.speed
 
         # now do controller
-        if abs(controller.get_axis(0)) > 0.1:
+        if controller is not None and abs(controller.get_axis(0)) > 0.1:
             self.speedx += self.speed * controller.get_axis(0)
-
-        # set device angle
-        if abs(controller.get_axis(3)) > 0.1:
-            vec = pygame.Vector2(controller.get_axis(4), controller.get_axis(3))
-            radius, angle = vec.as_polar()  # angle is between -180 and 180.
-            # Map the angle that as_polar returns to 0-360 with 0 pointing up.
-            adjusted_angle = (angle - 90) % 360
-            # adjusted_angle = 180 - adjusted_angle
-            # unmirror the angle
-
-            pygame.display.set_caption(
-                f"angle: {self.device_angle}, adjusted_angle: {adjusted_angle}"
-            )
-            self.device_angle = adjusted_angle
 
         # set speedy and jump_timer
         if (
             self.game.state.keymap.jump.is_pressed
             and self.jump_timer < self.max_jump_timer
         ):
-            self.speedy = self.speedy + (self.gravity * dt / 10)
+            self.speedy = self.speedy + (self.jump_strength * dt)
             self.jump_timer += dt
         elif (
             (
-                controller.get_button(0)
-                or controller.get_button(4)
-                or controller.get_button(5)
+                (controller is not None and controller.get_button(0))
+                or (controller is not None and controller.get_button(4))
+                or (controller is not None and controller.get_button(5))
             )
-            and controller.get_button(1)
+            and (controller is not None and controller.get_button(1))
             and self.jump_timer < self.max_jump_timer
         ):
-            self.speedy = self.speedy + (self.gravity * dt / 20)
+            self.speedy = self.speedy + (self.jump_strength * dt / 20)
             self.jump_timer += dt
         elif (
             (
-                controller.get_button(0)
-                or controller.get_button(4)
-                or controller.get_button(5)
+                (controller is not None and controller.get_button(0))
+                or (controller is not None and controller.get_button(4))
+                or (controller is not None and controller.get_button(5))
             )
-            and controller.get_button(3)
+            and (controller is not Nonw and controller.get_button(3))
             and self.jump_timer < self.max_jump_timer
         ):
-            self.speedy = self.speedy + (self.gravity * dt / 8)
+            self.speedy = self.speedy + (self.jump_strength * dt / 8)
             self.jump_timer += dt
         elif (
-            controller.get_button(0)
-            or controller.get_button(4)
-            or controller.get_button(5)
+            (controller is not None and controller.get_button(0))
+            or (controller is not None and controller.get_button(4))
+            or (controller is not None and controller.get_button(5))
         ) and self.jump_timer < self.max_jump_timer:
-            self.speedy = self.speedy + (self.gravity * dt / 10)
+            self.speedy = self.speedy + (self.jump_strength * dt / 10)
             self.jump_timer += dt
-        else:
-            self.speedy = self.speedy - (self.gravity * dt / 10)
+        elif self.game.state.keymap.jump.is_pressed:
             self.falling_timer += dt
-        if self.falling_timer > 25:
-            # cyote
+        elif self.falling_timer < self.hang_time:
+            self.falling_timer += dt
+        else:
+            self.falling_timer += dt
+            self.speedy = self.speedy - (self.gravity * dt / 10)
+        if self.falling_timer > self.coyote_time:
+            # coyote
             self.jump_timer = self.max_jump_timer
 
         if abs(self.speedy) > self.terminal_velocity:
             self.speedy = self.terminal_velocity * (self.speedy / abs(self.speedy))
             self.game.messages.append(f"terminal velocity: {round(self.speedy, 4)}")
+        if self.speedy > self.terminal_velocity_up:
+            self.speedy = self.terminal_velocity_up
 
         # move the character
         self.x += self.speedx * dt
@@ -283,12 +295,37 @@ class Player:
             self.update_rect()
             damage_collision = self.check_damage_collisions_after_moving()
             if damage_collision:
+                self.game.messages.append("damage collision")
                 return
             collision = self.check_collisions_after_moving_y(keys, controller)
 
             counter += 1
 
         self.check_checkpoint_collisions_after_moving()
+
+        self.facing = ""
+        if self.game.state.keymap.left.is_pressed:
+            self.facing_right = False
+            self.facing_left = True
+        if self.game.state.keymap.right.is_pressed:
+            self.facing_left = False
+            self.facing_right = True
+        if self.game.state.keymap.up.is_pressed:
+            self.game.messages.append("up is pressed")
+            self.facing_down = False
+            self.facing_up = True
+        if self.game.state.keymap.down.is_pressed:
+            self.facing_up = False
+            self.facing_down = True
+
+        if self.facing_left:
+            self.facing += "left"
+        elif self.facing_right:
+            self.facing += "right"
+        elif self.facing_up:
+            self.facing += "up"
+        elif self.facing_down:
+            self.facing += "down"
 
         self.game.messages.append(f"player pos: {round(self.x)}, {round(self.y)}")
         self.game.messages.append(
@@ -299,45 +336,50 @@ class Player:
         )
         self.game.messages.append(f"current map: {self.game.map.name}")
 
-        # if controller.get_axis(5) > -0.95:
-        #     print("R2 pressed")
-        # if controller.get_axis(2) > -0.95:
-        #     print("L2 pressed")
-        # if controller.get_button(4):
-        #     print("L1 pressed")
-        # if controller.get_button(5):
-        #     print("R1 pressed")
+        self.game.messages.append(f"facing: {self.facing}")
 
     def draw(self, camera):
         self.game.messages.append(f"player pos: {round(self.x)}, {round(self.y)}")
-        device_surf = pygame.Surface((200, 200), pygame.SRCALPHA)
-        device_surf.set_colorkey("black")
-        device_surf.fill("black")
+        self.game.message("jump_timer: " + str(self.jump_timer))
+        self.game.message("falling_timer: " + str(self.falling_timer))
+        self.game.message(
+            "jumps_pressed: " + str(self.game.state.keymap.jump.is_pressed)
+        )
+        self.game.message("jump_strength" + str(self.jump_strength))
+
         self.light.x = self.x - camera.state.left
         self.light.y = self.y - camera.state.top
         self.light.draw()
-        pygame.draw.rect(device_surf, (55, 55, 105), (125, 100, 20, 5))
-        # rotate around center
-        device_surf = pygame.transform.rotate(device_surf, self.device_angle)
-        device_surf = pygame.transform.scale(device_surf, (200, 200))
-        self.screen.blit(
-            device_surf,
-            (
-                self.rect.centerx - camera.state.left - 100,
-                self.rect.centery - camera.state.top - 100,
-            ),
-        )
-
-        pygame.draw.rect(
-            self.screen,
-            self.color,
-            (
-                self.x - camera.state.left,
-                self.y - camera.state.top,
-                self.width,
-                self.height,
-            ),
-        )
+        if self.facing_left:
+            self.screen.blit(
+                self.left,
+                (
+                    self.x - camera.state.left,
+                    self.y - camera.state.top,
+                    self.width,
+                    self.height,
+                ),
+            )
+        elif self.facing_right:
+            self.screen.blit(
+                self.right,
+                (
+                    self.x - camera.state.left,
+                    self.y - camera.state.top,
+                    self.width,
+                    self.height,
+                ),
+            )
+        else:
+            self.screen.blit(
+                self.front,
+                (
+                    self.x - camera.state.left,
+                    self.y - camera.state.top,
+                    self.width,
+                    self.height,
+                ),
+            )
 
 
 class Editor(Player):
@@ -346,30 +388,26 @@ class Editor(Player):
 
     def draw(self, camera):
         self.game.messages.append(
-            f"editor pos: {round(self.x - camera.state.left)}, {round(self.y - camera.state.top)}"
+            f"camera pos: {round(camera.state.left)}, {round(camera.state.top)}"
+        )
+        self.game.messages.append(
+            f"editor pos: {round(self.x + camera.state.left)}, {round(self.y + camera.state.top)}"
         )
         self.game.messages.append(
             f"mouse pos: {round(pygame.mouse.get_pos()[0])}, {round(pygame.mouse.get_pos()[1])}"
         )
-        # if the real mouse pos is past the real camera padding_rect move
         if self.x > camera.state.right:
             camera.padding_rect.right += 10
-        # elif self.x < self.camera.state.left:
-        #     self.camera.move_left()
-        # if self.y > self.camera.state.bottom:
-        #     self.camera.move_down()
-        # elif self.y < self.camera.state.top:
-        #     self.camera.move_up()
 
         # draw player
         pygame.draw.rect(
             self.screen,
             self.color,
             (
-                # self.x,
-                # self.y,
-                self.x - camera.state.left,
-                self.y - camera.state.top,
+                self.x,
+                self.y,
+                # self.x - camera.state.left,
+                # self.y - camera.state.top,
                 self.width,
                 self.height,
             ),
@@ -380,8 +418,6 @@ class Editor(Player):
             self.screen,
             (255, 0, 255),
             (
-                # self.x,
-                # self.y,
                 pygame.mouse.get_pos()[0],
                 pygame.mouse.get_pos()[1],
                 10,

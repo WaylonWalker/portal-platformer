@@ -10,7 +10,6 @@ def _rect(x, y, width, height):
 
 class Camera:
     def __init__(self, screen, player, width, height):
-        # self.camera_func = camera_func
         self.surf = pygame.Surface((width, height), pygame.SRCALPHA, 32)
         self.surf = self.surf.convert_alpha()
         self.screen = screen
@@ -23,18 +22,35 @@ class Camera:
         self.padding_rect = pygame.Rect(
             int(width * 0.2), int(height * 0.2), int(width * 0.6), int(height * 0.6)
         )
+        self.editor_mode = False
+        self.editor_speed = 10
 
     @property
     def rect(self):
         return _rect(self.x, self.y, self.width, self.height)
 
     def update(self):
-        # if (self.player.y - self.player.height) > self.height * 0.6:
-        #     self.padding_rect.bottom = int(self.player.y + self.player.height)
+        if self.editor_mode:
+            self.update_editor()
+        else:
+            self.update_player()
 
-        # else:
-        #     self.padding_rect.bottom = int(self.height * 0.8)
+    def update_editor(self):
+        mouse_pos = pygame.mouse.get_pos()
+        edge_threshold = 50
 
+        # Move camera when mouse is near edges
+        if mouse_pos[0] < edge_threshold:
+            self.state.x -= self.editor_speed
+        elif mouse_pos[0] > self.width - edge_threshold:
+            self.state.x += self.editor_speed
+
+        if mouse_pos[1] < edge_threshold:
+            self.state.y -= self.editor_speed
+        elif mouse_pos[1] > self.height - edge_threshold:
+            self.state.y += self.editor_speed
+
+    def update_player(self):
         if self.player.x < self.padding_rect.left:
             self.padding_rect.left = self.player.x
         if self.player.x + self.player.width > self.padding_rect.right:

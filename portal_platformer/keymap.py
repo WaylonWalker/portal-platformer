@@ -83,6 +83,8 @@ class KeyMap(BaseModel):
     select: Key = Key(key="K_j")
     debug: Key = Key(key="K_F3")
     fullscreen: Key = Key(key="K_F11")
+    crouch: Key = Key(key="K_LSHIFT")
+    sprint: Key = Key(key="K_LCTRL")
 
     def update(self, keys):
         self.jump.update(keys)

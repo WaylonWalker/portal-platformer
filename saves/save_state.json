@@ -1,11 +1,11 @@
 {
   "player": {
-    "x": 0,
-    "y": 0,
+    "x": -944,
+    "y": 1252,
     "checkpoint": {
       "name": "door",
-      "x": 0,
-      "y": 0
+      "x": 1100,
+      "y": 1350
     }
   },
   "map": {
@@ -85,7 +85,7 @@
         false,
         false,
         false,
-        false
+        true
       ],
       "history_length": 5
     },
@@ -109,6 +109,16 @@
         false,
         false
       ],
+      "history_length": 5
+    },
+    "crouch": {
+      "key": "K_LSHIFT",
+      "history": [],
+      "history_length": 5
+    },
+    "sprint": {
+      "key": "K_LCTRL",
+      "history": [],
       "history_length": 5
     }
   }

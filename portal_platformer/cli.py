@@ -3,8 +3,10 @@ import typer
 from portal_platformer.game import Game
 from portal_platformer.server import Server
 from portal_platformer.controller_button_debug import listen_controller
+from rich.console import Console
 
 app = typer.Typer()
+console = Console()
 
 
 @app.command()
@@ -27,6 +29,28 @@ def run(
 
     game = Game(**args)
     game.run()
+
+
+@app.command()
+def validate_maps():
+    game = Game()
+    for map_name in game.map_names:
+        try:
+            game.load_map(map_name)
+            console.print(f"[green]{map_name} is valid[/green]")
+        except Exception as e:
+            console.print(f"[red]{map_name} is invalid[/red]")
+            if "Invalid JSON" in str(e):
+                # get line, column from message
+                # Invalid JSON: trailing characters at line 1 column 2
+                message = [m for m in str(e).splitlines() if "Invalid JSON" in m][
+                    0
+                ].split()
+                line = int(message[message.index("line") + 1])
+                column = int(message[message.index("column") + 1])
+                console.print(f"[red]   line: {line}, column: {column}[/red]")
+            else:
+                console.print(e)
 
 
 @app.command("listen-controller")
