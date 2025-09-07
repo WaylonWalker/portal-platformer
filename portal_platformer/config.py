@@ -1,8 +1,10 @@
-from pydantic import BaseModel
+from pydantic_settings import BaseSettings
+from pathlib import Path
 
 
-class Config(BaseModel):
+class Config(BaseSettings):
     coyote_time: int = 25
+    assets_dir: Path = "assets"
 
 
 config = Config()

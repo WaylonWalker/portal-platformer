@@ -4,6 +4,7 @@ from portal_platformer.game import Game
 from portal_platformer.server import Server
 from portal_platformer.controller_button_debug import listen_controller
 from rich.console import Console
+from portal_platformer.config import config
 
 app = typer.Typer()
 console = Console()
@@ -62,6 +63,11 @@ def cli_listen_controller():
 def server():
     server = Server()
     server.run()
+
+
+@app.command()
+def config_show():
+    console.print(config.dict())
 
 
 if __name__ == "__main__":

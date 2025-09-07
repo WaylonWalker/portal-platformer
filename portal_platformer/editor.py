@@ -1,6 +1,5 @@
 from functools import lru_cache
 from portal_platformer.menu import create_menu
-from pathlib import Path
 from typing import Optional
 
 
@@ -14,13 +13,13 @@ from portal_platformer.map import Map
 from portal_platformer.player import Editor
 from portal_platformer.state import SaveState
 from portal_platformer.controller_state import ControllerState
+from portal_platformer.config import config
 
 console = Console()
 
 
-templateLoader = jinja2.FileSystemLoader(
-    searchpath=Path(__file__).parents[1] / "assets/maps"
-)
+templateLoader = jinja2.FileSystemLoader(searchpath=config.assets_dir / "maps")
+
 templates = jinja2.Environment(loader=templateLoader)
 
 
@@ -90,6 +89,13 @@ class Game:
         self.camera.editor_mode = not self.camera.editor_mode
         self.font = pygame.font.SysFont(None, 30)
 
+    def message(self, message):
+        self.messages.append(message)
+
+    @property
+    def map_names(self):
+        return [f.stem for f in (config.assets_dir / "maps").glob("*.json")]
+
     def load_map(self, map_name: str):
         self.map = Map.model_validate_json(
             templates.get_template(f"{map_name}.json").render({"game": self})
@@ -131,7 +137,7 @@ class Game:
             if event.type == pygame.QUIT:
                 self.running = False
 
-        self.screen.fill("black")
+        self.screen.fill((125, 125, 125))
         # player movement
         keys = pygame.key.get_pressed()
         self.state.keymap.update(keys)
@@ -181,17 +187,8 @@ class Game:
             # console.print("skipping draw")
             self.messages = []
             return
-        # console.print("drawing")
 
-        # player movement
-        # for obj in self.objects:
-        #     obj.draw(self.camera)
-        # for obj in self.ohurt:
-        #     obj.draw(self.camera)
-        # if self.debug:
-        #     for obj in self.checkpoints:
-        #         obj.draw(self.camera)
-
+        self.message("map: " + self.map.name)
         for obj in self.map.objects:
             obj.draw(self.camera)
 
@@ -204,7 +201,11 @@ class Game:
             self.render_messages()
         self.messages = []
 
-        self.screen.blit(self.camera.surf, (0, 0))
+        overlay = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
+        overlay.fill((255, 180, 100))
+        overlay.set_alpha(50)
+        # self.screen.blit(self.camera.surf, (0, 0))
+        self.screen.blit(overlay, (0, 0))
         pygame.display.flip()
 
     def render_messages(self):
@@ -218,5 +219,5 @@ class Game:
 
 
 if __name__ == "__main__":
-    game = Game()
+    game = Game(debug=True)
     game.run()

@@ -1,6 +1,6 @@
 from portal_platformer.map import Checkpoint
-from pathlib import Path
 from typing import Optional
+from portal_platformer.config import config
 
 import pygame
 
@@ -75,10 +75,10 @@ class Player:
         self.jumping = False
 
         self.front = pygame.image.load(
-            Path("assets/player/front/player-front.png")
+            config.assets_dir / "player" / "front" / "player-front.png"
         ).convert_alpha()
         self.right = pygame.image.load(
-            Path("assets/player/side/player-side.png")
+            config.assets_dir / "player" / "side" / "player-side.png"
         ).convert_alpha()
         self.left = pygame.transform.flip(self.right, True, False)
 

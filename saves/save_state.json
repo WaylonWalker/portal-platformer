@@ -1,15 +1,15 @@
 {
   "player": {
-    "x": -944,
-    "y": 1252,
+    "x": 365,
+    "y": -458,
     "checkpoint": {
       "name": "door",
-      "x": 1100,
-      "y": 1350
+      "x": 100,
+      "y": -700
     }
   },
   "map": {
-    "name": "test"
+    "name": "test4"
   },
   "keymap": {
     "jump": {
@@ -85,7 +85,7 @@
         false,
         false,
         false,
-        true
+        false
       ],
       "history_length": 5
     },

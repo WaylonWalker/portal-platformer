@@ -1,7 +1,11 @@
+import os
+
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 from functools import lru_cache
+
 from portal_platformer.menu import create_menu
-from pathlib import Path
 from typing import Optional
+from portal_platformer.config import config
 
 
 import jinja2
@@ -21,10 +25,7 @@ from portal_platformer.controller_state import ControllerState
 
 console = Console()
 
-
-templateLoader = jinja2.FileSystemLoader(
-    searchpath=Path(__file__).parents[1] / "assets/maps"
-)
+templateLoader = jinja2.FileSystemLoader(searchpath=config.assets_dir / "maps")
 templates = jinja2.Environment(loader=templateLoader)
 
 
@@ -92,9 +93,7 @@ class Game:
 
     @property
     def map_names(self):
-        return [
-            f.stem for f in (Path(__file__).parents[1] / "assets/maps/").glob("*.json")
-        ]
+        return [f.stem for f in (config.assets_dir / "maps").glob("*.json")]
 
     def load_map(self, map_name: str):
         self.map = Map.model_validate_json(
