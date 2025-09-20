@@ -1,4 +1,5 @@
 from pathlib import Path
+from portal_platformer.config import config
 from portal_platformer.keymap import KeyMap
 from portal_platformer.keymap import EditorKeyMap
 
@@ -11,7 +12,7 @@ class SaveState:
     def __init__(self, game, is_editor=False, save_file="save_state",):
         self.game = game
         self.is_editor = is_editor
-        self.save_file = Path(__file__).parents[1] / "saves" / (save_file + ".json")
+        self.save_file = config.assets_dir / "saves" / (save_file + ".json")
         if self.is_editor:
             self.state_model = EditorState
         else:
