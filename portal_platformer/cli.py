@@ -34,7 +34,7 @@ def run(
 
 @app.command()
 def validate_maps():
-    game = Game()
+    game = Game(init_pygame=False)
     for map_name in game.map_names:
         try:
             game.load_map(map_name)

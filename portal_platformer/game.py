@@ -37,6 +37,7 @@ def _rect(x, y, width, height):
 class Game:
     def __init__(
         self,
+        init_pygame=True,
         debug=False,
         fullscreen=False,
         width=1920,
@@ -44,13 +45,14 @@ class Game:
         map: Optional[str] = None,
         save_file="save_state",
     ):
-        pygame.init()
-        pygame.mixer.init(
-            frequency=44100,
-            size=-16,
-            channels=1,
-            buffer=512,
-        )
+        if init_pygame:
+            pygame.init()
+            pygame.mixer.init(
+                frequency=44100,
+                size=-16,
+                channels=1,
+                buffer=512,
+            )
 
         self.save_state = SaveState(self, save_file=save_file)
         self.state = self.save_state.state
@@ -74,7 +76,8 @@ class Game:
             map = self.state.map.name
         self.load_map(map)
         self.fps = []
-        pygame.display.set_caption("Portal Platformer")
+        if init_pygame:
+            pygame.display.set_caption("Portal Platformer")
         try:
             self.controller = pygame.joystick.Joystick(0)
             self.controller.init()
@@ -86,7 +89,8 @@ class Game:
         self.camera = Camera(
             self.screen, self.player, self.screen.get_width(), self.screen.get_height()
         )
-        self.font = pygame.font.SysFont(None, 30)
+        if init_pygame:
+            self.font = pygame.font.SysFont(None, 30)
 
     def message(self, message):
         self.messages.append(message)
