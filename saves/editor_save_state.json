@@ -1,17 +1,28 @@
 {
   "player": {
-    "x": 365,
-    "y": -458,
+    "x": 100,
+    "y": 1380,
     "checkpoint": {
-      "name": "door",
+      "name": "test",
       "x": 100,
-      "y": -700
+      "y": 1380
     }
   },
   "map": {
     "name": "test"
   },
   "keymap": {
+    "jump": {
+      "key": "K_SPACE",
+      "history": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "history_length": 5
+    },
     "left": {
       "key": "K_a",
       "history": [
@@ -47,83 +58,6 @@
     },
     "down": {
       "key": "K_d",
-      "history": [
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      "history_length": 5
-    },
-    "place_tile": {
-      "key": "K_SPACE",
-      "history": [
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      "history_length": 5
-    },
-    "delete_tile": {
-      "key": "K_BACKSPACE",
-      "history": [
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      "history_length": 5
-    },
-    "grow_tile_x": {
-      "key": "K_l",
-      "history": [
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      "history_length": 5
-    },
-    "shrink_tile_x": {
-      "key": "K_h",
-      "history": [
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      "history_length": 5
-    },
-    "grow_tile_y": {
-      "key": "K_j",
-      "history": [
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      "history_length": 5
-    },
-    "shrink_tile_y": {
-      "key": "K_k",
-      "history": [
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      "history_length": 5
-    },
-    "boost": {
-      "key": "K_RSHIFT",
       "history": [
         false,
         false,
@@ -175,6 +109,16 @@
         false,
         false
       ],
+      "history_length": 5
+    },
+    "crouch": {
+      "key": "K_LSHIFT",
+      "history": [],
+      "history_length": 5
+    },
+    "sprint": {
+      "key": "K_LCTRL",
+      "history": [],
       "history_length": 5
     }
   }
