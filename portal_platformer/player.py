@@ -8,8 +8,13 @@ from portal_platformer.light import Light
 
 
 effects = {
-    "feather falling": {"gravity": -0.1, "terminal_velocity": -1},
-    "double jump": {"jump_count": 1},
+    "feather falling": {
+        "gravity": -0.1,
+        "terminal_velocity": -1,
+    },
+    "double jump": {
+        "jump_count": 1,
+    },
     "speed": {
         "speed_factor": 0.5,
         "speed_sprint_factor": 0.75,
