@@ -41,10 +41,14 @@ class Key(BaseModel):
 
     @property
     def is_pressed(self):
+        if not self.history:
+            return False
         return self.history[-1]
 
     @property
     def is_released(self):
+        if not self.history:
+            return True
         return not self.is_pressed()
 
     @property
@@ -92,6 +96,45 @@ class KeyMap(BaseModel):
         self.right.update(keys)
         self.up.update(keys)
         self.down.update(keys)
+        self.menu.update(keys)
+        self.select.update(keys)
+        self.debug.update(keys)
+        self.fullscreen.update(keys)
+
+class EditorKeyMap(BaseModel):
+    left: Key = Key(key="K_LEFT")
+    right: Key = Key(key="K_RIGHT")
+    up: Key = Key(key="K_UP")
+    down: Key = Key(key="K_DOWN")
+
+    place_tile: Key = Key(key="K_SPACE")
+    delete: Key = Key(key="K_BACKSPACE")
+
+    grow_tile_x: Key = Key(key="K_l")
+    shrink_tile_x: Key = Key(key="K_h")
+    grow_tile_y: Key = Key(key="K_j")
+    shrink_tile_y: Key = Key(key="K_k")
+    boost: Key = Key(key="K_LSHIFT")
+
+    menu: Key = Key(key="K_ESCAPE")
+    select: Key = Key(key="K_j")
+    debug: Key = Key(key="K_F3")
+    fullscreen: Key = Key(key="K_F11")
+
+    def update(self, keys):
+        self.left.update(keys)
+        self.right.update(keys)
+        self.up.update(keys)
+        self.down.update(keys)
+
+        self.place_tile.update(keys)
+        self.delete.update(keys)
+        self.grow_tile_x.update(keys)
+        self.shrink_tile_x.update(keys)
+        self.grow_tile_y.update(keys)
+        self.shrink_tile_y.update(keys)
+        self.boost.update(keys)
+
         self.menu.update(keys)
         self.select.update(keys)
         self.debug.update(keys)

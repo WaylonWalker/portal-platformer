@@ -391,6 +391,36 @@ class Editor(Player):
     def move(self, keys, controller, dt):
         self.x, self.y = pygame.mouse.get_pos()
 
+        if self.game.state.keymap.grow_tile_x.key_down:
+            if self.game.state.keymap.boost.is_pressed:
+                self.width += 100
+            else:
+                self.width += 10
+        if self.game.state.keymap.shrink_tile_x.key_down and self.width > 10:
+            if self.game.state.keymap.boost.is_pressed:
+                self.width -= 100
+            else:
+                self.width -= 10
+        if self.game.state.keymap.grow_tile_y.key_down:
+            if self.game.state.keymap.boost.is_pressed:
+                self.height += 100
+            else:
+                self.height += 10
+        if self.game.state.keymap.shrink_tile_y.key_down and self.height > 10:
+            if self.game.state.keymap.boost.is_pressed:
+                self.height -= 100
+            else:
+                self.height -= 10
+
+        self.game.messages.append('')
+        self.game.messages.append(f"Placing Tile")
+        self.game.messages.append(f"Tile Size: {self.width}, {self.height}")
+        self.game.messages.append(f"Tile Pos: {round(self.x)}, {round(self.y)}")
+
+
+        if self.game.state.keymap.place_tile.key_down:
+            self.place_tile()
+
     def draw(self, camera):
         self.game.messages.append(
             f"camera pos: {round(camera.state.left)}, {round(camera.state.top)}"
@@ -404,20 +434,6 @@ class Editor(Player):
         if self.x > camera.state.right:
             camera.padding_rect.right += 10
 
-        # draw player
-        pygame.draw.rect(
-            self.screen,
-            self.color,
-            (
-                self.x,
-                self.y,
-                # self.x - camera.state.left,
-                # self.y - camera.state.top,
-                self.width,
-                self.height,
-            ),
-        )
-
         # draw mouse
         pygame.draw.rect(
             self.screen,
@@ -425,7 +441,7 @@ class Editor(Player):
             (
                 pygame.mouse.get_pos()[0],
                 pygame.mouse.get_pos()[1],
-                10,
-                10,
+                self.width,
+                self.height,
             ),
         )

@@ -10,7 +10,7 @@ from rich.console import Console
 
 from portal_platformer.camera import Camera
 from portal_platformer.map import Map
-from portal_platformer.player import Editor
+from portal_platformer.player import Editor as Player
 from portal_platformer.state import SaveState
 from portal_platformer.controller_state import ControllerState
 from portal_platformer.config import config
@@ -28,7 +28,7 @@ def _rect(x, y, width, height):
     return pygame.Rect(x, y, width, height)
 
 
-class Game:
+class Editor:
     def __init__(
         self,
         debug=False,
@@ -46,7 +46,7 @@ class Game:
             buffer=512,
         )
 
-        self.save_state = SaveState(self, save_file=save_file)
+        self.save_state = SaveState(self, is_editor=True, save_file=save_file)
         self.state = self.save_state.state
 
         self.draw_rate = 4
@@ -61,7 +61,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.dt = 0
         self.events = pygame.event.get()
-        self.player = Editor.from_game_object(self)
+        self.player = Player.from_game_object(self)
         self.player.height = 10
         self.player.width = 10
 
@@ -219,5 +219,5 @@ class Game:
 
 
 if __name__ == "__main__":
-    game = Game(debug=True)
-    game.run()
+    editor = Editor(debug=True)
+    editor.run()
