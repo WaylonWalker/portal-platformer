@@ -1,6 +1,8 @@
 from portal_platformer.map import Checkpoint
 from typing import Optional
 from portal_platformer.config import config
+from portal_platformer.map import Object
+
 
 import pygame
 
@@ -388,6 +390,11 @@ class Player:
 
 
 class Editor(Player):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.name = "editor-tile"
+
+
     def move(self, keys, controller, dt):
         self.x, self.y = pygame.mouse.get_pos()
 
@@ -396,7 +403,7 @@ class Editor(Player):
                 self.width += 100
             else:
                 self.width += 10
-        if self.game.state.keymap.shrink_tile_x.key_down and self.width > 10:
+        if self.game.state.keymap.shrink_tile_x.key_down:
             if self.game.state.keymap.boost.is_pressed:
                 self.width -= 100
             else:
@@ -406,11 +413,16 @@ class Editor(Player):
                 self.height += 100
             else:
                 self.height += 10
-        if self.game.state.keymap.shrink_tile_y.key_down and self.height > 10:
+        if self.game.state.keymap.shrink_tile_y.key_down:
             if self.game.state.keymap.boost.is_pressed:
                 self.height -= 100
             else:
                 self.height -= 10
+
+        if self.height<10:
+            self.height = 10
+        if self.width<10:
+            self.width = 10
 
         self.game.messages.append('')
         self.game.messages.append(f"Placing Tile")
@@ -421,7 +433,42 @@ class Editor(Player):
         if self.game.state.keymap.place_tile.key_down:
             self.place_tile()
 
+        if self.game.state.keymap.delete_tile.key_down:
+            self.delete_tile()
+
+        if self.game.state.keymap.save.key_down:
+            self.game.map.save()
+
+        self.game.messages.append('')
+        self.game.messages.append(f"tile count: {len(self.game.map.objects)}")
+
+
+
+    def place_tile(self):
+        tile = Object.model_construct(
+                name = self.name,
+                x = self.x + self.game.camera.state.left,
+                y = self.y + self.game.camera.state.top,
+                width = self.width,
+                height = self.height,
+                collision = True
+            )
+        self.game.map.objects.append(tile)
+
+    def delete_tile(self):
+
+
+        editor_rect = pygame.Rect(round(self.x + self.game.camera.state.left), round(self.y + self.game.camera.state.top), self.width, self.height)
+        print('rect: ', editor_rect)
+        for tile in self.game.map.objects:
+            if editor_rect.colliderect(tile.rect):
+                print(f'deleted tile {tile.name}')
+                self.game.map.objects.remove(tile)
+
+
     def draw(self, camera):
+
+        self.update_rect()
         self.game.messages.append(
             f"camera pos: {round(camera.state.left)}, {round(camera.state.top)}"
         )

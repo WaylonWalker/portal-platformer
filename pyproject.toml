@@ -78,6 +78,7 @@ exclude_lines = ["no cov", "if __name__ == .__main__.:", "if TYPE_CHECKING:"]
 [dependency-groups]
 dev = [
     "ipython>=8.12.3",
+    "pyinstrument>=5.1.1",
     "ruff>=0.11.8",
     "ty>=0.0.0a7",
 ]

@@ -1,5 +1,7 @@
 from functools import cached_property
+from portal_platformer.config import config
 from typing import Optional
+from pathlib import Path
 
 import pygame
 from pydantic import BaseModel
@@ -65,3 +67,7 @@ class Map(BaseModel):
     colors: list[Color] = []
     checkpoints: list[CheckpointObject] = []
     objects: list[Object] = []
+
+    def save(self):
+        save_file = config.assets_dir / "maps" / f"{self.name}.json"
+        save_file.write_text(self.model_dump_json(indent=2))

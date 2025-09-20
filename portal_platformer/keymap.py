@@ -108,13 +108,14 @@ class EditorKeyMap(BaseModel):
     down: Key = Key(key="K_DOWN")
 
     place_tile: Key = Key(key="K_SPACE")
-    delete: Key = Key(key="K_BACKSPACE")
+    delete_tile: Key = Key(key="K_BACKSPACE")
 
     grow_tile_x: Key = Key(key="K_l")
     shrink_tile_x: Key = Key(key="K_h")
     grow_tile_y: Key = Key(key="K_j")
     shrink_tile_y: Key = Key(key="K_k")
     boost: Key = Key(key="K_LSHIFT")
+    save: Key = Key(key="K_BACKQUOTE")
 
     menu: Key = Key(key="K_ESCAPE")
     select: Key = Key(key="K_j")
@@ -128,12 +129,13 @@ class EditorKeyMap(BaseModel):
         self.down.update(keys)
 
         self.place_tile.update(keys)
-        self.delete.update(keys)
+        self.delete_tile.update(keys)
         self.grow_tile_x.update(keys)
         self.shrink_tile_x.update(keys)
         self.grow_tile_y.update(keys)
         self.shrink_tile_y.update(keys)
         self.boost.update(keys)
+        self.save.update(keys)
 
         self.menu.update(keys)
         self.select.update(keys)
