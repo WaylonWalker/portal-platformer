@@ -38,6 +38,7 @@ Source = "https://github.com/unknown/portal-platformer"
 
 [project.scripts]
 portal-platformer = "portal_platformer.cli:app"
+pp = "portal_platformer.cli:app"
 
 [tool.hatch.version]
 path = "portal_platformer/__about__.py"
