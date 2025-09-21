@@ -178,12 +178,13 @@ class Player:
     def move(self):
         self.pos_history.append((self.x, self.y))
         self.pos_history = self.pos_history[-10:]
-        speed = 0.5 * self.game.dt # pixels per second
+        speedx = config.player_speed * self.game.dt # pixels per second
+        speedy = config.gravity * self.game.dt # pixels per second
 
         if self.game.state.keymap.right.is_pressed:
-            self.x += speed
+            self.x += speedx
         if self.game.state.keymap.left.is_pressed:
-            self.x -= speed
+            self.x -= speedx
 
         collision = True
         counter = 0
@@ -196,11 +197,11 @@ class Player:
             counter += 1
 
         if self.game.state.keymap.jump.is_pressed:
-            self.y -= speed
-            self.speedy = -speed
+            self.y -= speedy
+            self.speedy = -speedy
         else:
-            self.y += speed
-            self.speedy = speed
+            self.y += speedy
+            self.speedy = speedy
 
         collision = True
         counter = 0
