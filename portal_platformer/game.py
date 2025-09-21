@@ -181,7 +181,7 @@ class Game:
         if keys[pygame.K_e]:
             self.camera.editor_mode = not self.camera.editor_mode
 
-        self.player.move(keys, self.controller, self.dt)
+        self.player.move()
         self.camera.update()
         if self.frame % self.draw_rate != 0:
             # console.print("skipping draw")

@@ -63,6 +63,7 @@ class Player:
         self.x = x or self.checkpoint.x
         self.y = y or self.checkpoint.y
         self.update_rect()
+        self.pos_history = []
         self.light = Light(
             game=self.game,
             x=self.x,
@@ -143,144 +144,46 @@ class Player:
             if self.rect.colliderect(obj.rect):
                 collision = True
 
-                if self.rect.bottom - obj.rect.top < 5:
-                    self.y = obj.rect.top - self.height
-                    self.speedy = 0
-                elif self.speedx >= 0:
+                direction = self.x - self.pos_history[-1][0]
+                direction = -1 if direction < 0 else 1
+                if direction > 0:
                     self.x = obj.rect.left - self.width
-                elif self.speedx < 0:
+                elif direction < 0:
                     self.x = obj.rect.right
                 self.update_rect()
 
-                # wall slide / wall jump
-                if self.speedy < 0:
-                    self.speedy = self.speedy / 2
-                    self.jump_timer = 0
-                    self.falling_timer = 0
-
         return collision
 
-    def check_collisions_after_moving_y(self, keys, controller):
+    def check_collisions_after_moving_y(self):
         collision = False
-
-        if not controller:
-            return collision
 
         self.update_rect()
         for obj in [obj for obj in self.game.map.objects if obj.collision]:
             if self.rect.colliderect(obj.rect):
+                self.game.message(f"collided with {obj.name}")
                 collision = True
-                if self.speedy < 0:
-                    # landed
+                direction = self.y - self.pos_history[-1][1]
+                direction = -1 if direction < 0 else 1
+
+                if direction > 0:
                     self.y = obj.rect.top - self.height
-                    self.speedy = 0
-                    self.falling_timer = 0
-                    if (
-                        not keys[pygame.K_SPACE]
-                        and not controller.get_button(0)
-                        and not controller.get_button(5)
-                    ):
-                        self.jump_timer = 0
-                elif self.speedy > 0:
-                    # hit head
+                elif direction < 0:
                     self.y = obj.rect.bottom
-                    self.speedy = 0
-                    self.jump_timer = self.max_jump_timer
-                    self.falling_timer = 0
                 self.update_rect()
-                break
+
+
 
         return collision
 
-    def move(self, keys, controller, dt):
-        self.speedx = 0
+    def move(self):
+        self.pos_history.append((self.x, self.y))
+        self.pos_history = self.pos_history[-10:]
+        speed = 0.5 * self.game.dt # pixels per second
 
-        if controller is None:
-            self.game.message("No controller connected")
-
-        # determine speed
-        if keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]:
-            self.speed = self.speed_crouch_factor
-        elif keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]:
-            self.speed = self.speed_sprint_factor
-
-        elif controller is not None and controller.get_button(3):
-            self.speed = self.speed_sprint_factor
-        elif controller is not None and controller.get_button(1):
-            self.speed = self.speed_crouch_factor
-        else:
-            self.speed = self.speed_factor
-
-        # determine direction
-        if self.game.state.keymap.left.is_pressed:
-            self.speedx -= self.speed
         if self.game.state.keymap.right.is_pressed:
-            self.speedx += self.speed
-        if self.game.state.keymap.up.is_pressed:
-            self.speedx -= self.speed
-        if self.game.state.keymap.down.is_pressed:
-            self.speedx += self.speed
-
-        # now do controller
-        if controller is not None and abs(controller.get_axis(0)) > 0.1:
-            self.speedx += self.speed * controller.get_axis(0)
-
-        # set speedy and jump_timer
-        if (
-            self.game.state.keymap.jump.is_pressed
-            and self.jump_timer < self.max_jump_timer
-        ):
-            self.speedy = self.speedy + (self.jump_strength * dt)
-            self.jump_timer += dt
-        elif (
-            (
-                (controller is not None and controller.get_button(0))
-                or (controller is not None and controller.get_button(4))
-                or (controller is not None and controller.get_button(5))
-            )
-            and (controller is not None and controller.get_button(1))
-            and self.jump_timer < self.max_jump_timer
-        ):
-            self.speedy = self.speedy + (self.jump_strength * dt / 20)
-            self.jump_timer += dt
-        elif (
-            (
-                (controller is not None and controller.get_button(0))
-                or (controller is not None and controller.get_button(4))
-                or (controller is not None and controller.get_button(5))
-            )
-            and (controller is not Nonw and controller.get_button(3))
-            and self.jump_timer < self.max_jump_timer
-        ):
-            self.speedy = self.speedy + (self.jump_strength * dt / 8)
-            self.jump_timer += dt
-        elif (
-            (controller is not None and controller.get_button(0))
-            or (controller is not None and controller.get_button(4))
-            or (controller is not None and controller.get_button(5))
-        ) and self.jump_timer < self.max_jump_timer:
-            self.speedy = self.speedy + (self.jump_strength * dt / 10)
-            self.jump_timer += dt
-        elif self.game.state.keymap.jump.is_pressed:
-            self.falling_timer += dt
-        elif self.falling_timer < self.hang_time:
-            self.falling_timer += dt
-        else:
-            self.falling_timer += dt
-            self.speedy = self.speedy - (self.gravity * dt / 10)
-        if self.falling_timer > self.coyote_time:
-            # coyote
-            self.jump_timer = self.max_jump_timer
-
-        if abs(self.speedy) > self.terminal_velocity:
-            self.speedy = self.terminal_velocity * (self.speedy / abs(self.speedy))
-            self.game.messages.append(f"terminal velocity: {round(self.speedy, 4)}")
-        if self.speedy > self.terminal_velocity_up:
-            self.speedy = self.terminal_velocity_up
-
-        # move the character
-        self.x += self.speedx * dt
-        self.update_rect()
+            self.x += speed
+        if self.game.state.keymap.left.is_pressed:
+            self.x -= speed
 
         collision = True
         counter = 0
@@ -292,9 +195,12 @@ class Player:
             collision = self.check_collisions_after_moving_x()
             counter += 1
 
-        # move y
-        self.y -= self.speedy * dt
-        self.update_rect()
+        if self.game.state.keymap.jump.is_pressed:
+            self.y -= speed
+            self.speedy = -speed
+        else:
+            self.y += speed
+            self.speedy = speed
 
         collision = True
         counter = 0
@@ -304,46 +210,166 @@ class Player:
             if damage_collision:
                 self.game.messages.append("damage collision")
                 return
-            collision = self.check_collisions_after_moving_y(keys, controller)
+            collision = self.check_collisions_after_moving_y()
 
             counter += 1
 
         self.check_checkpoint_collisions_after_moving()
 
-        self.facing = ""
-        if self.game.state.keymap.left.is_pressed:
-            self.facing_right = False
-            self.facing_left = True
-        if self.game.state.keymap.right.is_pressed:
-            self.facing_left = False
-            self.facing_right = True
-        if self.game.state.keymap.up.is_pressed:
-            self.game.messages.append("up is pressed")
-            self.facing_down = False
-            self.facing_up = True
-        if self.game.state.keymap.down.is_pressed:
-            self.facing_up = False
-            self.facing_down = True
 
-        if self.facing_left:
-            self.facing += "left"
-        elif self.facing_right:
-            self.facing += "right"
-        elif self.facing_up:
-            self.facing += "up"
-        elif self.facing_down:
-            self.facing += "down"
 
-        self.game.messages.append(f"player pos: {round(self.x)}, {round(self.y)}")
-        self.game.messages.append(
-            f"player speed: {self.speedx:+02.1f}, {self.speedy:+02.1f}"
-        )
-        self.game.messages.append(
-            f"last checkpoint: {self.checkpoint.x}, {self.checkpoint.y}"
-        )
-        self.game.messages.append(f"current map: {self.game.map.name}")
 
-        self.game.messages.append(f"facing: {self.facing}")
+        # self.speedx = 0
+        #
+        # if controller is None:
+        #     self.game.message("No controller connected")
+        #
+        # # determine speed
+        # if keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]:
+        #     self.speed = self.speed_crouch_factor
+        # elif keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]:
+        #     self.speed = self.speed_sprint_factor
+        #
+        # elif controller is not None and controller.get_button(3):
+        #     self.speed = self.speed_sprint_factor
+        # elif controller is not None and controller.get_button(1):
+        #     self.speed = self.speed_crouch_factor
+        # else:
+        #     self.speed = self.speed_factor
+        #
+        # # determine direction
+        # if self.game.state.keymap.left.is_pressed:
+        #     self.speedx -= self.speed
+        # if self.game.state.keymap.right.is_pressed:
+        #     self.speedx += self.speed
+        # if self.game.state.keymap.up.is_pressed:
+        #     self.speedx -= self.speed
+        # if self.game.state.keymap.down.is_pressed:
+        #     self.speedx += self.speed
+        #
+        # # now do controller
+        # if controller is not None and abs(controller.get_axis(0)) > 0.1:
+        #     self.speedx += self.speed * controller.get_axis(0)
+        #
+        # # set speedy and jump_timer
+        # if (
+        #     self.game.state.keymap.jump.is_pressed
+        #     and self.jump_timer < self.max_jump_timer
+        # ):
+        #     self.speedy = self.speedy + (self.jump_strength * dt)
+        #     self.jump_timer += dt
+        # elif (
+        #     (
+        #         (controller is not None and controller.get_button(0))
+        #         or (controller is not None and controller.get_button(4))
+        #         or (controller is not None and controller.get_button(5))
+        #     )
+        #     and (controller is not None and controller.get_button(1))
+        #     and self.jump_timer < self.max_jump_timer
+        # ):
+        #     self.speedy = self.speedy + (self.jump_strength * dt / 20)
+        #     self.jump_timer += dt
+        # elif (
+        #     (
+        #         (controller is not None and controller.get_button(0))
+        #         or (controller is not None and controller.get_button(4))
+        #         or (controller is not None and controller.get_button(5))
+        #     )
+        #     and (controller is not Nonw and controller.get_button(3))
+        #     and self.jump_timer < self.max_jump_timer
+        # ):
+        #     self.speedy = self.speedy + (self.jump_strength * dt / 8)
+        #     self.jump_timer += dt
+        # elif (
+        #     (controller is not None and controller.get_button(0))
+        #     or (controller is not None and controller.get_button(4))
+        #     or (controller is not None and controller.get_button(5))
+        # ) and self.jump_timer < self.max_jump_timer:
+        #     self.speedy = self.speedy + (self.jump_strength * dt / 10)
+        #     self.jump_timer += dt
+        # elif self.game.state.keymap.jump.is_pressed:
+        #     self.falling_timer += dt
+        # elif self.falling_timer < self.hang_time:
+        #     self.falling_timer += dt
+        # else:
+        #     self.falling_timer += dt
+        #     self.speedy = self.speedy - (self.gravity * dt / 10)
+        # if self.falling_timer > self.coyote_time:
+        #     # coyote
+        #     self.jump_timer = self.max_jump_timer
+        #
+        # if abs(self.speedy) > self.terminal_velocity:
+        #     self.speedy = self.terminal_velocity * (self.speedy / abs(self.speedy))
+        #     self.game.messages.append(f"terminal velocity: {round(self.speedy, 4)}")
+        # if self.speedy > self.terminal_velocity_up:
+        #     self.speedy = self.terminal_velocity_up
+        #
+        # # move the character
+        # self.x += self.speedx * dt
+        # self.update_rect()
+        #
+        # collision = True
+        # counter = 0
+        # while collision and counter < 50:
+        #     self.update_rect()
+        #     damage_collision = self.check_damage_collisions_after_moving()
+        #     if damage_collision:
+        #         return
+        #     collision = self.check_collisions_after_moving_x()
+        #     counter += 1
+        #
+        # # move y
+        # self.y -= self.speedy * dt
+        # self.update_rect()
+        #
+        # collision = True
+        # counter = 0
+        # while collision and counter < 50:
+        #     self.update_rect()
+        #     damage_collision = self.check_damage_collisions_after_moving()
+        #     if damage_collision:
+        #         self.game.messages.append("damage collision")
+        #         return
+        #     collision = self.check_collisions_after_moving_y(keys, controller)
+        #
+        #     counter += 1
+        #
+        # self.check_checkpoint_collisions_after_moving()
+        #
+        # self.facing = ""
+        # if self.game.state.keymap.left.is_pressed:
+        #     self.facing_right = False
+        #     self.facing_left = True
+        # if self.game.state.keymap.right.is_pressed:
+        #     self.facing_left = False
+        #     self.facing_right = True
+        # if self.game.state.keymap.up.is_pressed:
+        #     self.game.messages.append("up is pressed")
+        #     self.facing_down = False
+        #     self.facing_up = True
+        # if self.game.state.keymap.down.is_pressed:
+        #     self.facing_up = False
+        #     self.facing_down = True
+        #
+        # if self.facing_left:
+        #     self.facing += "left"
+        # elif self.facing_right:
+        #     self.facing += "right"
+        # elif self.facing_up:
+        #     self.facing += "up"
+        # elif self.facing_down:
+        #     self.facing += "down"
+        #
+        # self.game.messages.append(f"player pos: {round(self.x)}, {round(self.y)}")
+        # self.game.messages.append(
+        #     f"player speed: {self.speedx:+02.1f}, {self.speedy:+02.1f}"
+        # )
+        # self.game.messages.append(
+        #     f"last checkpoint: {self.checkpoint.x}, {self.checkpoint.y}"
+        # )
+        # self.game.messages.append(f"current map: {self.game.map.name}")
+        #
+        # self.game.messages.append(f"facing: {self.facing}")
 
     def draw(self, camera):
         self.game.messages.append(f"player pos: {round(self.x)}, {round(self.y)}")
