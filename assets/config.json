@@ -1,5 +1,5 @@
 {
     "player_speed": 0.5,
     "gravity": 0.8,
-    "grid_size": 32
+    "grid_size": 10
 }

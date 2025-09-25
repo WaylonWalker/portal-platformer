@@ -1,4 +1,5 @@
 import typer
+from typing import Optional
 
 from portal_platformer.game import Game
 from portal_platformer.editor import Editor
@@ -19,6 +20,8 @@ def run(
     height: int = 1080,
     map: str = "test",
     save_file: str = "save_state",
+    x: Optional[int] = None,
+    y: Optional[int] = None,
 ):
     args = {
         "debug": debug,
@@ -28,6 +31,10 @@ def run(
         "map": map,
         "save_file": save_file,
     }
+    if x is not None:
+        args["x"] = x
+    if y is not None:
+        args["y"] = y
 
     game = Game(**args)
     game.run()

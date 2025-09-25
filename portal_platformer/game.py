@@ -43,6 +43,8 @@ class Game:
         width=1920,
         height=1080,
         map: Optional[str] = None,
+        x: Optional[int] = None,
+        y: Optional[int] = None,
         save_file="save_state",
     ):
         if init_pygame:
@@ -70,9 +72,12 @@ class Game:
         self.dt = 0
         self.events = pygame.event.get()
         self.player = Player.from_game_object(self)
+        if x is not None and y is not None:
+            self.player.x = x
+            self.player.y = y
         if map is None and self.state.map.name is None:
             map = "test"
-        if self.state.map.name is not None:
+        if map is None and self.state.map.name is not None:
             map = self.state.map.name
         self.load_map(map)
         self.fps = []
