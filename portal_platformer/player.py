@@ -476,22 +476,23 @@ class Editor(Player):
                     elif event.y < 0:  # Scroll down
                         self.width -= step
 
-        if self.game.state.keymap.grow_tile_x.key_down:
+
+        if self.game.state.keymap.grow_tile_x.is_pressed:
             if self.game.state.keymap.boost.is_pressed:
                 self.width += 100
             else:
                 self.width += 10
-        if self.game.state.keymap.shrink_tile_x.key_down:
+        if self.game.state.keymap.shrink_tile_x.is_pressed:
             if self.game.state.keymap.boost.is_pressed:
                 self.width -= 100
             else:
                 self.width -= 10
-        if self.game.state.keymap.grow_tile_y.key_down:
+        if self.game.state.keymap.grow_tile_y.is_pressed:
             if self.game.state.keymap.boost.is_pressed:
                 self.height += 100
             else:
                 self.height += 10
-        if self.game.state.keymap.shrink_tile_y.key_down:
+        if self.game.state.keymap.shrink_tile_y.is_pressed:
             if self.game.state.keymap.boost.is_pressed:
                 self.height -= 100
             else:
