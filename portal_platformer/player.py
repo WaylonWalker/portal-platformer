@@ -457,7 +457,24 @@ class Editor(Player):
 
         self.x = math.floor(self.x / config.grid_size) * config.grid_size
         self.y = math.floor(self.y / config.grid_size) * config.grid_size
+        # Handle scrollwheel
+        for event in self.game.events:
+            if event.type == pygame.MOUSEWHEEL:
+                boost = self.game.state.keymap.boost.is_pressed
+                step = 100 if boost else 10
 
+                # Control pressed → resize Y
+                if pygame.key.get_mods() & pygame.KMOD_CTRL:
+                    if event.y > 0:  # Scroll up
+                        self.height += step
+                    elif event.y < 0:  # Scroll down
+                        self.height -= step
+                else:
+                    # No control → resize X
+                    if event.y > 0:  # Scroll up
+                        self.width += step
+                    elif event.y < 0:  # Scroll down
+                        self.width -= step
 
         if self.game.state.keymap.grow_tile_x.key_down:
             if self.game.state.keymap.boost.is_pressed:
