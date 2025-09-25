@@ -9,7 +9,7 @@ from pyinstrument import Profiler
 from rich.console import Console
 
 from portal_platformer.camera import Camera
-from portal_platformer.map import Map
+from portal_platformer.map import Map, Object
 from portal_platformer.player import Editor as Player
 from portal_platformer.state import SaveState
 from portal_platformer.controller_state import ControllerState
@@ -70,7 +70,7 @@ class Editor:
 
         if map is None and self.state.map.name is None:
             map = "test"
-        if self.state.map.name is not None:
+        if map is None and self.state.map.name is not None:
             map = self.state.map.name
         self.load_map(map)
         self.fps = []
@@ -97,9 +97,12 @@ class Editor:
         return [f.stem for f in (config.assets_dir / "maps").glob("*.json")]
 
     def load_map(self, map_name: str):
-        self.map = Map.model_validate_json(
-            templates.get_template(f"{map_name}.json").render({"game": self})
-        )
+        try:
+            self.map = Map.model_validate_json(
+                templates.get_template(f"{map_name}.json").render({"game": self})
+            )
+        except jinja2.TemplateNotFound:
+            self.map = Map(name=map_name, objects=[Object(name=map_name+'_spawn', x=-50, y=0, height=10, width=100)])
         self.map.name = map_name
 
     def run(self):
@@ -127,6 +130,7 @@ class Editor:
         self.messages.append(
             f"DRAW FPS: {(int((sum(self.fps) / len(self.fps)) / 5) * 5) / self.draw_rate}"
         )
+        self.messages.append(f"map: {self.map.name}")
         # self.messages.append(
         #     f"FPS: {int((int(self.clock.get_fps()/5)*5) / self.draw_rate)}"
         # )
