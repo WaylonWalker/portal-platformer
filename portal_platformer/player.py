@@ -494,7 +494,7 @@ class Editor(Player):
         if self.game.state.keymap.place_tile.key_down:
             self.place_tile()
 
-        if self.game.state.keymap.delete_tile.key_down:
+        if self.game.state.keymap.delete_tile.is_pressed:
             self.delete_tile()
 
         if self.game.state.keymap.save.key_down:
