@@ -1,3 +1,4 @@
+import math
 from portal_platformer.map import Checkpoint
 from typing import Optional
 from portal_platformer.config import config
@@ -425,6 +426,8 @@ class Editor(Player):
     def move(self, keys, controller, dt):
         self.x, self.y = pygame.mouse.get_pos()
 
+        self.x = math.floor(self.x / config.grid_size) * config.grid_size
+        self.y = math.floor(self.y / config.grid_size) * config.grid_size
         if self.game.state.keymap.grow_tile_x.key_down:
             if self.game.state.keymap.boost.is_pressed:
                 self.width += 100
@@ -502,8 +505,12 @@ class Editor(Player):
         self.game.messages.append(
             f"editor pos: {round(self.x + camera.state.left)}, {round(self.y + camera.state.top)}"
         )
+
+        mouse_x = math.floor(pygame.mouse.get_pos()[0] / config.grid_size) * config.grid_size
+        mouse_y = math.floor(pygame.mouse.get_pos()[1] / config.grid_size) * config.grid_size
+
         self.game.messages.append(
-            f"mouse pos: {round(pygame.mouse.get_pos()[0])}, {round(pygame.mouse.get_pos()[1])}"
+            f"mouse pos: {mouse_x}, {mouse_y}"
         )
         if self.x > camera.state.right:
             camera.padding_rect.right += 10
@@ -513,8 +520,8 @@ class Editor(Player):
             self.screen,
             (255, 0, 255),
             (
-                pygame.mouse.get_pos()[0],
-                pygame.mouse.get_pos()[1],
+                mouse_x,
+                mouse_y,
                 self.width,
                 self.height,
             ),

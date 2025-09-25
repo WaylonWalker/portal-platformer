@@ -8,6 +8,7 @@ class Config(BaseSettings):
     player_speed: float = 0.5
     gravity: float = 0.8
     assets_dir: Path = "assets"
+    grid_size: int = 10
 
 config = Config()
 
