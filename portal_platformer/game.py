@@ -193,6 +193,18 @@ class Game:
 
         for obj in self.map.objects:
             obj.draw(self.camera)
+            # if debug, draw collision objects with red border.
+            if self.debug:
+                for obj in self.player.collisions_during_move:
+                    pygame.draw.rect(self.screen, (255, 0, 0), (
+                        obj.rect.x - self.camera.state.left,
+                        obj.rect.y - self.camera.state.top,
+                        obj.rect.width,
+                        obj.rect.height
+                        )
+                        , 2)
+
+
         # self.camera.update(self.player)
         if self.debug:
             self.camera.draw()

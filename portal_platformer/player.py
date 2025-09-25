@@ -3,6 +3,7 @@ from portal_platformer.map import Checkpoint
 from typing import Optional
 from portal_platformer.config import config
 from portal_platformer.map import Object
+from portal_platformer.color import ColorPalette
 
 
 import pygame
@@ -90,6 +91,7 @@ class Player:
             config.assets_dir / "player" / "side" / "player-side.png"
         ).convert_alpha()
         self.left = pygame.transform.flip(self.right, True, False)
+        self.collisions_during_move = []
 
     @classmethod
     def from_game_object(cls, obj):
@@ -125,6 +127,7 @@ class Player:
         collision = False
         for obj in [obj for obj in self.game.map.objects if obj.damage]:
             if self.rect.colliderect(obj.rect):
+                self.collisions_during_move.append(obj)
                 collision = True
                 self.reset_to_checkpoint()
         return collision
@@ -132,6 +135,7 @@ class Player:
     def check_checkpoint_collisions_after_moving(self):
         for obj in [obj for obj in self.game.map.objects if obj.open]:
             if self.rect.colliderect(obj.rect):
+                self.collisions_during_move.append(obj)
                 print(f"loading map {obj.link.name}")
                 self.game.load_map(obj.link.name)
                 self.set_checkpoint(obj.link.checkpoint, obj.link.name)
@@ -139,19 +143,41 @@ class Player:
                 self.reset_to_checkpoint()
                 print(f"player x,y: {self.x}, {self.y}")
 
+    def get_collision_objects(self):
+        return [obj for obj in self.game.map.objects if obj.collision and obj.rect.colliderect(self.rect)]
+
+    @property
+    def has_collisions(self):
+        return len(self.get_collision_objects()) > 0
+
     def check_collisions_after_moving_x(self):
         collision = False
+        self.game.messages.append(f"player bottom: {self.rect.bottom}")
+        self.game.messages.append(f"first block top: {self.game.map.objects[0].rect.top}")
         for obj in [obj for obj in self.game.map.objects if obj.collision]:
             if self.rect.colliderect(obj.rect):
+                self.collisions_during_move.append(obj)
                 collision = True
 
-                direction = self.x - self.pos_history[-1][0]
-                direction = -1 if direction < 0 else 1
-                if direction > 0:
-                    self.x = obj.rect.left - self.width
-                elif direction < 0:
-                    self.x = obj.rect.right
-                self.update_rect()
+                # is it a ramp?
+                if self.rect.bottom-obj.rect.top <= 20:
+                    prev_y = self.y
+                    self.y = obj.rect.top - self.height
+                    self.update_rect()
+                    if self.has_collisions:
+                        self.y = prev_y
+                        self.update_rect()
+                    else:
+                        return collision
+                # its not a ramp
+                else:
+                    direction = self.x - self.pos_history[-1][0]
+                    direction = -1 if direction < 0 else 1
+                    if direction > 0:
+                        self.x = obj.rect.left - self.width
+                    elif direction < 0:
+                        self.x = obj.rect.right
+                    self.update_rect()
 
         return collision
 
@@ -161,7 +187,7 @@ class Player:
         self.update_rect()
         for obj in [obj for obj in self.game.map.objects if obj.collision]:
             if self.rect.colliderect(obj.rect):
-                self.game.message(f"collided with {obj.name}")
+                self.collisions_during_move.append(obj)
                 collision = True
                 direction = self.y - self.pos_history[-1][1]
                 direction = -1 if direction < 0 else 1
@@ -174,9 +200,11 @@ class Player:
 
 
 
+
         return collision
 
     def move(self):
+        self.collisions_during_move = []
         self.pos_history.append((self.x, self.y))
         self.pos_history = self.pos_history[-10:]
         speedx = config.player_speed * self.game.dt # pixels per second
@@ -217,6 +245,7 @@ class Player:
             counter += 1
 
         self.check_checkpoint_collisions_after_moving()
+        self.game.message(f'collided with {self.collisions_during_move}')
 
 
 
@@ -428,6 +457,8 @@ class Editor(Player):
 
         self.x = math.floor(self.x / config.grid_size) * config.grid_size
         self.y = math.floor(self.y / config.grid_size) * config.grid_size
+
+
         if self.game.state.keymap.grow_tile_x.key_down:
             if self.game.state.keymap.boost.is_pressed:
                 self.width += 100
@@ -481,7 +512,8 @@ class Editor(Player):
                 y = self.y + self.game.camera.state.top,
                 width = self.width,
                 height = self.height,
-                collision = True
+                collision = True,
+                color=ColorPalette.black,
             )
         self.game.map.objects.append(tile)
 
