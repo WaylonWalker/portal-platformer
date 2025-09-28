@@ -290,7 +290,13 @@ class Player:
                 self.speedy = 0
 
         # ---------------------------------
-        # 3) Integrate position
+        # 3) Apply terminal velocity
+        # ---------------------------------
+        if self.speedy > self.terminal_velocity:
+            self.speedy = self.terminal_velocity
+
+        # ---------------------------------
+        # 4) Integrate position
         # ---------------------------------
         self.y += self.speedy * dt
 
