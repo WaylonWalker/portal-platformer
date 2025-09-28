@@ -180,7 +180,9 @@ class Player:
                 # is it a ramp?
 
                 prev_bottom = self.rect.bottom
-                while (self.rect.bottom - obj.rect.top <= 20) and self.has_collisions:
+                counter = 0
+                while (self.rect.bottom - obj.rect.top <= 20) and self.has_collisions and counter<50 :
+                    counter += 1
                     prev_y = self.y
                     self.y = obj.rect.top - self.height
                     self.update_rect()
