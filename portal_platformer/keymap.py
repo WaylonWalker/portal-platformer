@@ -195,6 +195,7 @@ class EditorKeyMap(BaseModel):
 
     place_tile: Key = Key(key="K_SPACE")        # e.g. map to MOUSE_LEFT if you want
     delete_tile: Key = Key(key="K_BACKSPACE")   # e.g. map to MOUSE_RIGHT
+    next_color: Key = Key(key="K_n")
 
     grow_tile_x: Key = Key(key="K_l")
     shrink_tile_x: Key = Key(key="K_h")
@@ -216,6 +217,7 @@ class EditorKeyMap(BaseModel):
 
         self.place_tile.update(keys, mouse_buttons, recent_events)
         self.delete_tile.update(keys, mouse_buttons, recent_events)
+        self.next_color.update(keys, mouse_buttons, recent_events)
         self.grow_tile_x.update(keys, mouse_buttons, recent_events)
         self.shrink_tile_x.update(keys, mouse_buttons, recent_events)
         self.grow_tile_y.update(keys, mouse_buttons, recent_events)

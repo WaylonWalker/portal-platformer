@@ -26,7 +26,7 @@ class Object(BaseModel):
     y: int
     width: int
     height: int
-    color: Optional[Color | ColorPalette] = ColorPalette.red
+    color: Optional[Color | ColorPalette] = ColorPalette.black
     damage: bool = False
     collision: bool = False
     hidden: bool = False
@@ -43,9 +43,14 @@ class Object(BaseModel):
 
     def draw(self, camera):
         if self.rect.colliderect(camera.state):
+            try:
+                color = self.color.rgb
+            except AttributeError:
+                color = self.color
             pygame.draw.rect(
                 self.screen,
-                self.color.rgb,
+                # self.color.rgb,
+                color,
                 (
                     self.x - camera.state.left,
                     self.y - camera.state.top,

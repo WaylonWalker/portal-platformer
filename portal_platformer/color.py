@@ -15,6 +15,18 @@ class Color(BaseModel):
     def rgb(self):
         return (self.r, self.g, self.b)
 
+    @staticmethod
+    def from_str(color_str: str):
+        # self.name = color_str
+        # self.r, self.g, self.b = pygame.Color(color_str).rgb
+        # return self
+        return Color(
+            name=color_str,
+            r=pygame.Color(color_str).r,
+            g=pygame.Color(color_str).g,
+            b=pygame.Color(color_str).b,
+        )
+
 
 class ColorPalette(Enum):
     aliceblue = "aliceblue"

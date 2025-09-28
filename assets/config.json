@@ -1,5 +1,11 @@
 {
     "player_speed": 0.5,
     "gravity": 0.8,
-    "grid_size": 10
+    "grid_size": 10,
+    "color_palette": [
+        "#343434",
+        "#7b7b7b",
+        "#36ad69",
+        "#e2d6b5"
+    ]
 }
