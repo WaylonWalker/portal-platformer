@@ -55,7 +55,7 @@ class Player:
         self.coyote_time = 250
         self.hang_time = 0
         self.gravity = 0.15
-        self.jump_strength = 0.1
+        self.jump_strength = 1.6
         self.jump_timer = 0
         self.max_jump_timer = self.jump_strength * 20
         self.falling_timer = 0
@@ -150,6 +150,24 @@ class Player:
     def has_collisions(self):
         return len(self.get_collision_objects()) > 0
 
+    @property
+    def has_floor_collision(self):
+        # check if player is on top of a block
+        # filter blocks within x range
+
+        objects = [obj for obj in self.game.map.objects if obj.collision and obj.rect.left <= self.rect.right and obj.rect.right >= self.rect.left]
+
+        # calculate the y distance of all blocks the player is on top of
+        y_distances = [self.rect.bottom - obj.rect.top for obj in objects]
+
+        # check if any of the y distances are less than the player's height
+        has_floor_collision = any(abs(y_dist)==0  for y_dist in y_distances)
+        self.game.messages.append(f"y_distances: {y_distances}")
+        if has_floor_collision:
+            self.game.messages.append(f"has floor collision: {has_floor_collision}")
+        return has_floor_collision
+
+
     def check_collisions_after_moving_x(self):
         collision = False
         self.game.messages.append(f"player bottom: {self.rect.bottom}")
@@ -160,7 +178,9 @@ class Player:
                 collision = True
 
                 # is it a ramp?
-                if self.rect.bottom-obj.rect.top <= 20:
+
+                prev_bottom = self.rect.bottom
+                while (self.rect.bottom - obj.rect.top <= 20) and self.has_collisions:
                     prev_y = self.y
                     self.y = obj.rect.top - self.height
                     self.update_rect()
@@ -207,8 +227,11 @@ class Player:
         self.collisions_during_move = []
         self.pos_history.append((self.x, self.y))
         self.pos_history = self.pos_history[-10:]
+        self.move_x()
+        self.move_y()
+
+    def move_x(self):
         speedx = config.player_speed * self.game.dt # pixels per second
-        speedy = config.gravity * self.game.dt # pixels per second
 
         if self.game.state.keymap.right.is_pressed:
             self.x += speedx
@@ -225,12 +248,56 @@ class Player:
             collision = self.check_collisions_after_moving_x()
             counter += 1
 
-        if self.game.state.keymap.jump.is_pressed:
-            self.y -= speedy
-            self.speedy = -speedy
+    def move_y(self):
+        dt = self.game.dt  # seconds
+        g = config.gravity  # px/s^2
+        max_hold = config.jump_time  # seconds you can hold to extend jump
+        jump_v = self.jump_strength  # px/s upward impulse (positive number)
+
+        # ---------------------------------
+        # 1) Handle jump start (impulse)
+        # ---------------------------------
+        # "just pressed" semantics depend on your input layer; this works with is_pressed + timers
+        if self.game.state.keymap.jump.key_down and self.has_floor_collision and self.jump_timer == 0:
+            self.speedy = -jump_v             # set upward velocity; NO dt here
+            self.jump_timer = 0.000001        # start timer (tiny >0 to mark "jumping")
+            self.is_jumping = True
+        # continue counting while held
+        elif self.game.state.keymap.jump.is_pressed and self.jump_timer > 0:
+            self.jump_timer += dt
+            self.is_jumping = True
+            if self.jump_timer >= max_hold:
+                self.is_jumping = False
+                self.jump_timer = 0
         else:
-            self.y += speedy
-            self.speedy = speedy
+            # released or not jumping
+            self.is_jumping = False
+            if self.jump_timer > 0:
+                self.jump_timer = 0
+
+        # ---------------------------------
+        # 2) Apply gravity
+        # ---------------------------------
+        if not self.has_floor_collision:
+            # Optional: lower gravity while rising & holding jump for nicer “variable height”
+            if self.is_jumping and self.speedy < 0:
+                self.speedy += (g * 0.5) * dt   # half gravity while holding jump
+            else:
+                self.speedy += g * dt           # normal gravity
+        else:
+            # On floor: kill tiny downward drift
+            if self.speedy > 0:
+                self.speedy = 0
+
+        # ---------------------------------
+        # 3) Integrate position
+        # ---------------------------------
+        self.y += self.speedy * dt
+
+        self.game.messages.append(f"speedy(px/s): {self.speedy:.2f}")
+        self.game.messages.append(f"jumping: {self.is_jumping}, jump_timer: {self.jump_timer:.3f}")
+
+        self.game.messages.append(f"jumping: {self.is_jumping}")
 
         collision = True
         counter = 0
@@ -238,7 +305,6 @@ class Player:
             self.update_rect()
             damage_collision = self.check_damage_collisions_after_moving()
             if damage_collision:
-                self.game.messages.append("damage collision")
                 return
             collision = self.check_collisions_after_moving_y()
 
@@ -246,161 +312,6 @@ class Player:
 
         self.check_checkpoint_collisions_after_moving()
         self.game.message(f'collided with {self.collisions_during_move}')
-
-
-
-
-        # self.speedx = 0
-        #
-        # if controller is None:
-        #     self.game.message("No controller connected")
-        #
-        # # determine speed
-        # if keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]:
-        #     self.speed = self.speed_crouch_factor
-        # elif keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]:
-        #     self.speed = self.speed_sprint_factor
-        #
-        # elif controller is not None and controller.get_button(3):
-        #     self.speed = self.speed_sprint_factor
-        # elif controller is not None and controller.get_button(1):
-        #     self.speed = self.speed_crouch_factor
-        # else:
-        #     self.speed = self.speed_factor
-        #
-        # # determine direction
-        # if self.game.state.keymap.left.is_pressed:
-        #     self.speedx -= self.speed
-        # if self.game.state.keymap.right.is_pressed:
-        #     self.speedx += self.speed
-        # if self.game.state.keymap.up.is_pressed:
-        #     self.speedx -= self.speed
-        # if self.game.state.keymap.down.is_pressed:
-        #     self.speedx += self.speed
-        #
-        # # now do controller
-        # if controller is not None and abs(controller.get_axis(0)) > 0.1:
-        #     self.speedx += self.speed * controller.get_axis(0)
-        #
-        # # set speedy and jump_timer
-        # if (
-        #     self.game.state.keymap.jump.is_pressed
-        #     and self.jump_timer < self.max_jump_timer
-        # ):
-        #     self.speedy = self.speedy + (self.jump_strength * dt)
-        #     self.jump_timer += dt
-        # elif (
-        #     (
-        #         (controller is not None and controller.get_button(0))
-        #         or (controller is not None and controller.get_button(4))
-        #         or (controller is not None and controller.get_button(5))
-        #     )
-        #     and (controller is not None and controller.get_button(1))
-        #     and self.jump_timer < self.max_jump_timer
-        # ):
-        #     self.speedy = self.speedy + (self.jump_strength * dt / 20)
-        #     self.jump_timer += dt
-        # elif (
-        #     (
-        #         (controller is not None and controller.get_button(0))
-        #         or (controller is not None and controller.get_button(4))
-        #         or (controller is not None and controller.get_button(5))
-        #     )
-        #     and (controller is not Nonw and controller.get_button(3))
-        #     and self.jump_timer < self.max_jump_timer
-        # ):
-        #     self.speedy = self.speedy + (self.jump_strength * dt / 8)
-        #     self.jump_timer += dt
-        # elif (
-        #     (controller is not None and controller.get_button(0))
-        #     or (controller is not None and controller.get_button(4))
-        #     or (controller is not None and controller.get_button(5))
-        # ) and self.jump_timer < self.max_jump_timer:
-        #     self.speedy = self.speedy + (self.jump_strength * dt / 10)
-        #     self.jump_timer += dt
-        # elif self.game.state.keymap.jump.is_pressed:
-        #     self.falling_timer += dt
-        # elif self.falling_timer < self.hang_time:
-        #     self.falling_timer += dt
-        # else:
-        #     self.falling_timer += dt
-        #     self.speedy = self.speedy - (self.gravity * dt / 10)
-        # if self.falling_timer > self.coyote_time:
-        #     # coyote
-        #     self.jump_timer = self.max_jump_timer
-        #
-        # if abs(self.speedy) > self.terminal_velocity:
-        #     self.speedy = self.terminal_velocity * (self.speedy / abs(self.speedy))
-        #     self.game.messages.append(f"terminal velocity: {round(self.speedy, 4)}")
-        # if self.speedy > self.terminal_velocity_up:
-        #     self.speedy = self.terminal_velocity_up
-        #
-        # # move the character
-        # self.x += self.speedx * dt
-        # self.update_rect()
-        #
-        # collision = True
-        # counter = 0
-        # while collision and counter < 50:
-        #     self.update_rect()
-        #     damage_collision = self.check_damage_collisions_after_moving()
-        #     if damage_collision:
-        #         return
-        #     collision = self.check_collisions_after_moving_x()
-        #     counter += 1
-        #
-        # # move y
-        # self.y -= self.speedy * dt
-        # self.update_rect()
-        #
-        # collision = True
-        # counter = 0
-        # while collision and counter < 50:
-        #     self.update_rect()
-        #     damage_collision = self.check_damage_collisions_after_moving()
-        #     if damage_collision:
-        #         self.game.messages.append("damage collision")
-        #         return
-        #     collision = self.check_collisions_after_moving_y(keys, controller)
-        #
-        #     counter += 1
-        #
-        # self.check_checkpoint_collisions_after_moving()
-        #
-        # self.facing = ""
-        # if self.game.state.keymap.left.is_pressed:
-        #     self.facing_right = False
-        #     self.facing_left = True
-        # if self.game.state.keymap.right.is_pressed:
-        #     self.facing_left = False
-        #     self.facing_right = True
-        # if self.game.state.keymap.up.is_pressed:
-        #     self.game.messages.append("up is pressed")
-        #     self.facing_down = False
-        #     self.facing_up = True
-        # if self.game.state.keymap.down.is_pressed:
-        #     self.facing_up = False
-        #     self.facing_down = True
-        #
-        # if self.facing_left:
-        #     self.facing += "left"
-        # elif self.facing_right:
-        #     self.facing += "right"
-        # elif self.facing_up:
-        #     self.facing += "up"
-        # elif self.facing_down:
-        #     self.facing += "down"
-        #
-        # self.game.messages.append(f"player pos: {round(self.x)}, {round(self.y)}")
-        # self.game.messages.append(
-        #     f"player speed: {self.speedx:+02.1f}, {self.speedy:+02.1f}"
-        # )
-        # self.game.messages.append(
-        #     f"last checkpoint: {self.checkpoint.x}, {self.checkpoint.y}"
-        # )
-        # self.game.messages.append(f"current map: {self.game.map.name}")
-        #
-        # self.game.messages.append(f"facing: {self.facing}")
 
     def draw(self, camera):
         self.game.messages.append(f"player pos: {round(self.x)}, {round(self.y)}")
@@ -450,6 +361,7 @@ class Editor(Player):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.name = "editor-tile"
+        self.color = config.color_palette[0]
 
 
     def move(self, keys, controller, dt):
@@ -477,22 +389,22 @@ class Editor(Player):
                         self.width -= step
 
 
-        if self.game.state.keymap.grow_tile_x.is_pressed:
+        if self.game.state.keymap.grow_tile_x.key_down:
             if self.game.state.keymap.boost.is_pressed:
                 self.width += 100
             else:
                 self.width += 10
-        if self.game.state.keymap.shrink_tile_x.is_pressed:
+        if self.game.state.keymap.shrink_tile_x.key_down:
             if self.game.state.keymap.boost.is_pressed:
                 self.width -= 100
             else:
                 self.width -= 10
-        if self.game.state.keymap.grow_tile_y.is_pressed:
+        if self.game.state.keymap.grow_tile_y.key_down:
             if self.game.state.keymap.boost.is_pressed:
                 self.height += 100
             else:
                 self.height += 10
-        if self.game.state.keymap.shrink_tile_y.is_pressed:
+        if self.game.state.keymap.shrink_tile_y.key_down:
             if self.game.state.keymap.boost.is_pressed:
                 self.height -= 100
             else:
@@ -507,6 +419,7 @@ class Editor(Player):
         self.game.messages.append(f"Placing Tile")
         self.game.messages.append(f"Tile Size: {self.width}, {self.height}")
         self.game.messages.append(f"Tile Pos: {round(self.x)}, {round(self.y)}")
+        self.game.messages.append(f"Tile Color: {self.color}")
 
 
         if self.game.state.keymap.place_tile.key_down:
@@ -514,6 +427,9 @@ class Editor(Player):
 
         if self.game.state.keymap.delete_tile.is_pressed:
             self.delete_tile()
+
+        if self.game.state.keymap.next_color.key_down:
+            self.next_color()
 
         if self.game.state.keymap.save.key_down:
             self.game.map.save()
@@ -531,19 +447,22 @@ class Editor(Player):
                 width = self.width,
                 height = self.height,
                 collision = True,
-                color=ColorPalette.black,
+                color=self.color,
             )
         self.game.map.objects.append(tile)
 
     def delete_tile(self):
-
-
         editor_rect = pygame.Rect(round(self.x + self.game.camera.state.left), round(self.y + self.game.camera.state.top), self.width, self.height)
         print('rect: ', editor_rect)
         for tile in self.game.map.objects:
             if editor_rect.colliderect(tile.rect):
                 print(f'deleted tile {tile.name}')
                 self.game.map.objects.remove(tile)
+
+    def next_color(self):
+        self.color = config.color_palette[(config.color_palette.index(self.color) + 1) % len(config.color_palette)]
+
+
 
 
     def draw(self, camera):
@@ -568,7 +487,8 @@ class Editor(Player):
         # draw mouse
         pygame.draw.rect(
             self.screen,
-            (255, 0, 255),
+            # (255, 0, 255),
+            self.color.rgb,
             (
                 mouse_x,
                 mouse_y,
